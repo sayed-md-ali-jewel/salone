@@ -30,10 +30,10 @@ export async function POST(request: Request) {
   }
 
   if (!user || !validPassword) {
-    return NextResponse.redirect(new URL("/login?error=invalid", request.url), { status: 303 });
+    return new NextResponse(null, { status: 303, headers: { Location: "/login?error=invalid" } });
   }
 
-  const response = NextResponse.redirect(new URL("/dashboard", request.url), { status: 303 });
+  const response = new NextResponse(null, { status: 303, headers: { Location: "/dashboard" } });
   response.cookies.set(cookieName, signSession({ id: user.id, name: user.name, email: user.email, role: user.role }), {
     httpOnly: true,
     sameSite: "lax",
