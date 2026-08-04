@@ -172,25 +172,25 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, cur
       )}
       {viewingCustomer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-md border bg-card p-5 shadow-lg">
-            <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="max-h-[94vh] w-full max-w-7xl overflow-y-auto rounded-md border bg-card p-6 shadow-lg">
+            <div className="mb-6 flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold">{viewingCustomer.name}</h2>
+                <h2 className="text-2xl font-semibold">{viewingCustomer.name}</h2>
                 <p className="text-sm text-muted-foreground">{viewingCustomer.mobile}{viewingCustomer.address ? ` · ${viewingCustomer.address}` : ""}</p>
               </div>
               <Button type="button" variant="ghost" size="icon" onClick={() => setViewingCustomer(null)}><X className="h-4 w-4" /></Button>
             </div>
-            <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Previous Due</p><p className="text-lg font-semibold">{formatCurrency(Number(viewingCustomer.previousDue || 0), currencyCode)}</p></div>
-              <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Paid</p><p className="text-lg font-semibold">{formatCurrency(paidAmount(viewingCustomer), currencyCode)}</p></div>
-              <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Balance</p><p className="text-lg font-semibold">{formatCurrency(dueBalance(viewingCustomer), currencyCode)}</p></div>
-              <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Service Total</p><p className="text-lg font-semibold">{formatCurrency(serviceAmount(viewingCustomer), currencyCode)}</p></div>
+            <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-md border p-4"><p className="text-sm text-muted-foreground">Previous Due</p><p className="mt-2 text-2xl font-semibold">{formatCurrency(Number(viewingCustomer.previousDue || 0), currencyCode)}</p></div>
+              <div className="rounded-md border p-4"><p className="text-sm text-muted-foreground">Paid</p><p className="mt-2 text-2xl font-semibold">{formatCurrency(paidAmount(viewingCustomer), currencyCode)}</p></div>
+              <div className="rounded-md border p-4"><p className="text-sm text-muted-foreground">Balance</p><p className="mt-2 text-2xl font-semibold">{formatCurrency(dueBalance(viewingCustomer), currencyCode)}</p></div>
+              <div className="rounded-md border p-4"><p className="text-sm text-muted-foreground">Service Total</p><p className="mt-2 text-2xl font-semibold">{formatCurrency(serviceAmount(viewingCustomer), currencyCode)}</p></div>
             </div>
-            <div className="mb-4 rounded-md border p-3">
-              <p className="text-xs text-muted-foreground">Due Note</p>
-              <p className="text-sm">{viewingCustomer.previousDueNote || "-"}</p>
+            <div className="mb-5 rounded-md border p-4">
+              <p className="text-sm text-muted-foreground">Due Note</p>
+              <p className="mt-2 text-sm">{viewingCustomer.previousDueNote || "-"}</p>
             </div>
-            <div className="mb-4 flex justify-end">
+            <div className="mb-5 flex justify-end">
               {dueBalance(viewingCustomer) > 0 && (
                 <Button type="button" onClick={() => { setPayingCustomer(viewingCustomer); setViewingCustomer(null); }}>
                   <Banknote className="h-4 w-4" />
@@ -198,11 +198,11 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, cur
                 </Button>
               )}
             </div>
-            <div className="grid gap-4 xl:grid-cols-2">
-              <div className="rounded-md border p-3">
-                <h3 className="mb-2 text-sm font-medium">Due Payment Transactions</h3>
+            <div className="space-y-5">
+              <div className="rounded-md border p-4">
+                <h3 className="mb-3 text-base font-semibold">Due Payment Transactions</h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[520px] text-sm">
+                  <table className="w-full min-w-[640px] text-sm">
                     <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Amount</th><th>Note</th></tr></thead>
                     <tbody>{viewingCustomer.customerPayments.length ? viewingCustomer.customerPayments.map((payment) => (
                       <tr key={payment.id} className="border-b">
@@ -216,10 +216,10 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, cur
                   </table>
                 </div>
               </div>
-              <div className="rounded-md border p-3">
-                <h3 className="mb-2 text-sm font-medium">Service Transactions</h3>
+              <div className="rounded-md border p-4">
+                <h3 className="mb-3 text-base font-semibold">Service Transactions</h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[720px] text-sm">
+                  <table className="w-full min-w-[900px] text-sm">
                     <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Service</th><th>Employee</th><th>Amount</th><th>Note</th></tr></thead>
                     <tbody>{viewingCustomer.serviceEntries.length ? viewingCustomer.serviceEntries.map((entry) => (
                       <tr key={entry.id} className="border-b">
