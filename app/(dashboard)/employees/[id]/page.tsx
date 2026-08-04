@@ -63,6 +63,19 @@ function paidForEmployeePeriod(expenses: { title: string; notes: string | null; 
   }), (expense) => Number(expense.amount));
 }
 
+function paymentHistoryNote(expense: { notes: string | null; amount: number }) {
+  const notes = String(expense.notes || "");
+  const beforeMatch = notes.match(/Remaining before payment:\s*([0-9,.]+)/i);
+  const afterMatch = notes.match(/After payment amount:\s*([0-9,.]+)/i);
+
+  if (!beforeMatch) return notes || "-";
+
+  const before = Number(beforeMatch[1].replace(/,/g, ""));
+  const after = afterMatch ? Number(afterMatch[1].replace(/,/g, "")) : Math.max(0, before - Number(expense.amount));
+
+  return `Remaining before payment: ${before.toFixed(2)}. After payment amount: ${after.toFixed(2)}.`;
+}
+
 export default async function EmployeePage({ params, searchParams }: EmployeePageProps) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const selectedDate = searchValue(query, "date") || "";
@@ -131,9 +144,9 @@ export default async function EmployeePage({ params, searchParams }: EmployeePag
         <CardHeader><CardTitle>Payment History</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
-            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Paid Date</th><th>Amount</th><th>Notes</th></tr></thead>
+            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Paid Date</th><th>Amount</th><th>Note</th></tr></thead>
             <tbody>{paymentHistory.length ? paymentHistory.map((expense) => (
-              <tr key={expense.id} className="border-b"><td className="py-3">{formatDisplayDate(expense.expenseDate)}</td><td className="font-medium">{formatCurrency(Number(expense.amount), currencyCode)}</td><td className="min-w-56 text-muted-foreground">{expense.notes || "-"}</td></tr>
+              <tr key={expense.id} className="border-b"><td className="py-3">{formatDisplayDate(expense.expenseDate)}</td><td className="font-medium">{formatCurrency(Number(expense.amount), currencyCode)}</td><td className="min-w-56 text-muted-foreground">{paymentHistoryNote(expense)}</td></tr>
             )) : (
               <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">No payment history for this employee.</td></tr>
             )}</tbody>

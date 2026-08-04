@@ -114,6 +114,8 @@ function EmployeeFormModal({
   closeHref?: Route;
   onClose?: () => void;
 }) {
+  const [salaryType, setSalaryType] = useState(employee?.salaryType || "MONTHLY");
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
       <div className="w-full max-w-lg rounded-md border bg-card p-5 shadow-lg">
@@ -130,11 +132,18 @@ function EmployeeFormModal({
           <div className="space-y-2"><Label>Name</Label><Input name="name" defaultValue={employee?.name || ""} required /></div>
           <div className="space-y-2"><Label>Mobile</Label><Input name="mobile" defaultValue={employee?.mobile || ""} /></div>
           <div className="space-y-2"><Label>Joining Date</Label><Input name="joiningDate" type="date" defaultValue={employee?.joiningDate ? new Date(employee.joiningDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)} required /></div>
-          <div className="space-y-2"><Label>Salary Type</Label><select name="salaryType" defaultValue={employee?.salaryType || "MONTHLY"} className="h-10 w-full rounded-md border bg-background px-3 text-sm"><option value="MONTHLY">Monthly</option><option value="PERCENTAGE">Percentage</option></select></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2"><Label>Monthly Salary</Label><Input name="monthlySalary" type="number" step="0.01" defaultValue={employee?.monthlySalary || ""} /></div>
-            <div className="space-y-2"><Label>Commission %</Label><Input name="commissionRate" type="number" step="0.01" defaultValue={employee?.commissionRate || ""} /></div>
+          <div className="space-y-2">
+            <Label>Salary Type</Label>
+            <select name="salaryType" value={salaryType} onChange={(event) => setSalaryType(event.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+              <option value="MONTHLY">Monthly</option>
+              <option value="PERCENTAGE">Percentage</option>
+            </select>
           </div>
+          {salaryType === "MONTHLY" ? (
+            <div className="space-y-2"><Label>Monthly Salary</Label><Input name="monthlySalary" type="number" step="0.01" defaultValue={employee?.monthlySalary || ""} /></div>
+          ) : (
+            <div className="space-y-2"><Label>Commission %</Label><Input name="commissionRate" type="number" step="0.01" defaultValue={employee?.commissionRate || ""} /></div>
+          )}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2"><Label>Due Salary</Label><Input name="dueSalary" type="number" step="0.01" min="0" defaultValue={employee?.dueSalary || 0} /></div>
             <div className="space-y-2"><Label>Due Salary Note</Label><Input name="dueSalaryNote" defaultValue={employee?.dueSalaryNote || ""} placeholder="Required if due is added" /></div>

@@ -524,7 +524,6 @@ export async function payEmployee(formData: FormData) {
   const month = String(formData.get("month") || "");
   const customAmount = validMoney(formData.get("amount"));
   const paidDate = String(formData.get("paidDate") || "");
-  const customNotes = String(formData.get("notes") || "").trim();
   const range = paymentDateRange(date, month);
   const paymentDate = paidDate ? validDate(`${paidDate}T00:00:00`) : new Date();
 
@@ -556,22 +555,14 @@ export async function payEmployee(formData: FormData) {
   const amount = customAmount > 0 ? customAmount : remainingAmount;
 
   if (amount <= 0 || amount > remainingAmount) redirect("/staff-payments?status=payment-invalid");
+  const remainingAfterPayment = Math.max(0, remainingAmount - amount);
 
   await insertOne("Expense", {
     title: `Staff payment - ${employee.name}`,
     category: "SALARY",
     amount,
     expenseDate: mongoDate(paymentDate),
-    notes: [
-      `Paid ${employee.name} for ${paymentPeriodLabel(date, month)}.`,
-      `Employee ID: ${employeeId}.`,
-      `Suggested amount: ${suggestedAmount.toFixed(2)}.`,
-      `Already paid: ${alreadyPaid.toFixed(2)}.`,
-      `Remaining before payment: ${remainingAmount.toFixed(2)}.`,
-      `Commission: ${commissionPayment.toFixed(2)}.`,
-      `Monthly salary: ${monthlyPayment.toFixed(2)}.`,
-      customNotes ? `Notes: ${customNotes}` : ""
-    ].filter(Boolean).join(" ")
+    notes: `Employee ID: ${employeeId}. Paid ${employee.name} for ${periodLabel}. Remaining before payment: ${remainingAmount.toFixed(2)}. After payment amount: ${remainingAfterPayment.toFixed(2)}.`
   });
 
   revalidatePath("/expenses");
