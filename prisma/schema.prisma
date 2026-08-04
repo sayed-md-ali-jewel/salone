@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  CASHIER
+}
+
+enum SalaryType {
+  MONTHLY
+  PERCENTAGE
+}
+
+enum ExpenseCategory {
+  RENT
+  SALARY
+  PRODUCT
+  UTILITY
+  OTHER
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CASHIER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Customer {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  mobile         String         @unique
+  address        String?
+  serviceEntries ServiceEntry[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Employee {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  mobile         String?
+  salaryType     SalaryType     @default(MONTHLY)
+  monthlySalary  Float?
+  commissionRate Float?
+  serviceEntries ServiceEntry[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Service {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  price          Float
+  defaultRate    Float          @default(0)
+  serviceEntries ServiceEntry[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model ServiceEntry {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  customerId       String   @db.ObjectId
+  employeeId       String   @db.ObjectId
+  serviceId        String   @db.ObjectId
+  serviceDate      DateTime @default(now())
+  amount           Float
+  commissionAmount Float    @default(0)
+  salonProfit      Float    @default(0)
+  notes            String?
+  customer         Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  employee         Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  service          Service  @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Expense {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  category    ExpenseCategory @default(OTHER)
+  amount      Float
+  expenseDate DateTime        @default(now())
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

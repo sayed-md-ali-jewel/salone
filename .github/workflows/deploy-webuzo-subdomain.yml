@@ -1,0 +1,97 @@
+name: Build and Deploy to Webuzo Subdomain
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      FTP_SERVER: ${{ secrets.SUBDOMAIN_FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.SUBDOMAIN_FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.SUBDOMAIN_FTP_PASSWORD }}
+      FTP_PROTOCOL: ${{ secrets.SUBDOMAIN_FTP_PROTOCOL || 'ftp' }}
+      FTP_PORT: ${{ secrets.SUBDOMAIN_FTP_PORT || '30005' }}
+      SERVER_DIR: ${{ secrets.SUBDOMAIN_SERVER_DIR || '/public_html/royalearab' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Validate deploy secrets
+        run: |
+          missing=0
+          for name in DATABASE_URL JWT_SECRET FTP_SERVER FTP_USERNAME FTP_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required deploy value: $name"
+              missing=1
+            fi
+          done
+          if [ "$FTP_PROTOCOL" != "ftp" ] && [ "$FTP_PROTOCOL" != "ftps" ]; then
+            echo "::error::SUBDOMAIN_FTP_PROTOCOL must be either ftp or ftps. Use an SFTP action instead if your server only supports SFTP."
+            missing=1
+          fi
+          exit "$missing"
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Prepare deploy folder
+        run: |
+          mkdir deploy
+          cp -a .next/standalone/. deploy/
+          mkdir -p deploy/.next
+          cp -r .next/static deploy/.next/static
+          mkdir -p deploy/_next
+          cp -r .next/static deploy/_next/static
+          cp -r public deploy/public
+          cp server.js deploy/server.js
+          cp server.js deploy/app.js
+          rm -rf deploy/.git deploy/.github deploy/.env.local deploy/.env.example
+          mkdir -p deploy/tmp
+          echo "restarted at $(date -u +%Y-%m-%dT%H:%M:%SZ) - ${GITHUB_SHA}" > deploy/tmp/restart.txt
+          node -e "const fs=require('fs');const p='deploy/package.json';const pkg=JSON.parse(fs.readFileSync(p,'utf8'));pkg.scripts={start:'node server.js'};pkg.main='server.js';pkg.engines={node:'20.x'};fs.writeFileSync(p, JSON.stringify(pkg,null,2)+'\n');"
+          {
+            echo "NODE_ENV=production"
+            echo "HOSTNAME=127.0.0.1"
+            echo "DATABASE_URL=${DATABASE_URL}"
+            echo "JWT_SECRET=${JWT_SECRET}"
+            if [ -n "$ADMIN_EMAIL" ]; then echo "ADMIN_EMAIL=${ADMIN_EMAIL}"; fi
+            if [ -n "$ADMIN_PASSWORD" ]; then echo "ADMIN_PASSWORD=${ADMIN_PASSWORD}"; fi
+            if [ -n "$NEXT_PUBLIC_API_URL" ]; then echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}"; fi
+          } > deploy/.env.production
+          cp deploy/.env.production deploy/.env
+
+      - name: Upload to Webuzo subdomain by FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ env.FTP_SERVER }}
+          username: ${{ env.FTP_USERNAME }}
+          password: ${{ env.FTP_PASSWORD }}
+          protocol: ${{ env.FTP_PROTOCOL }}
+          port: ${{ env.FTP_PORT }}
+          local-dir: ./deploy/
+          server-dir: ${{ env.SERVER_DIR }}
+          exclude: |
+            **/.git*
+            **/.git*/**
