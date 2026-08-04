@@ -22,7 +22,7 @@ type ServiceItem = SelectItem & {
 
 type ServiceEntryListItem = {
   id: string;
-  serviceDate: Date;
+  serviceDate: Date | string;
   amount: number;
   commissionAmount: number;
   salonProfit: number;
@@ -54,6 +54,14 @@ export function ServiceEntryList({ customers, employees, services, entries, curr
     ...(filters.serviceId ? { serviceId: filters.serviceId } : {}),
     ...(filters.employeeId ? { employeeId: filters.employeeId } : {}),
     ...(filters.perPage !== "25" ? { perPage: filters.perPage } : {})
+  };
+  const formatDate = (value: Date | string) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+  };
+  const dateInputValue = (value: Date | string) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
   };
 
   return (
@@ -96,7 +104,7 @@ export function ServiceEntryList({ customers, employees, services, entries, curr
             <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Customer</th><th>Employee</th><th>Service</th><th>Amount</th><th>Commission</th><th>Profit</th><th className="sticky right-0 z-10 w-28 border-l bg-card text-center">Action</th></tr></thead>
             <tbody>{entries.length ? entries.map((entry) => (
               <tr key={entry.id} className="border-b">
-                <td className="py-3">{entry.serviceDate.toLocaleDateString()}</td><td>{entry.customer.name}</td><td>{entry.employee.name}</td><td>{entry.service.name}</td><td>${String(entry.amount)}</td><td>${String(entry.commissionAmount)}</td><td className="font-medium">${String(entry.salonProfit)}</td>
+                <td className="py-3">{formatDate(entry.serviceDate)}</td><td>{entry.customer.name}</td><td>{entry.employee.name}</td><td>{entry.service.name}</td><td>${String(entry.amount)}</td><td>${String(entry.commissionAmount)}</td><td className="font-medium">${String(entry.salonProfit)}</td>
                 <td className="sticky right-0 z-10 border-l bg-card">
                   <div className="flex justify-center gap-1">
                     <Button variant="ghost" size="icon" type="button" onClick={() => setEditingEntry(entry)}><Pencil className="h-4 w-4" /></Button>
@@ -153,7 +161,7 @@ export function ServiceEntryList({ customers, employees, services, entries, curr
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>Amount</Label><Input name="amount" type="number" step="0.01" defaultValue={editingEntry.amount} required /></div>
-                <div className="space-y-2"><Label>Date</Label><Input name="serviceDate" type="date" defaultValue={editingEntry.serviceDate.toISOString().slice(0, 10)} required /></div>
+                <div className="space-y-2"><Label>Date</Label><Input name="serviceDate" type="date" defaultValue={dateInputValue(editingEntry.serviceDate)} required /></div>
               </div>
               <div className="space-y-2"><Label>Notes</Label><Input name="notes" defaultValue={editingEntry.notes || ""} /></div>
               <div className="flex justify-end gap-2">
