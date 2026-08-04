@@ -1,6 +1,7 @@
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
 import { ExpenseList } from "@/components/expenses/expense-list";
 import { PageHeader } from "@/components/layout/page-header";
+import { StatusAlert } from "@/components/ui/status-alert";
 
 const PAGE_SIZE = 25;
 
@@ -51,7 +52,7 @@ export default async function ExpensesPage({ searchParams }: ExpensesPageProps) 
   return (
     <>
       <PageHeader title="Expenses" description="Track rent, salary, product, utility and other salon costs." />
-      {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
+      {status && <StatusAlert tone={status.tone} text={status.text} />}
       <ExpenseList expenses={expenses} currentPage={page} totalItems={totalExpenses} pageSize={PAGE_SIZE} filters={{ fromDate, toDate, category }} />
     </>
   );

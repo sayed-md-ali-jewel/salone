@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { StatusAlert } from "@/components/ui/status-alert";
 import { cn } from "@/lib/utils";
 
 type SettingsPageProps = {
@@ -52,7 +53,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   return (
     <>
       <PageHeader title="Settings" description="Configure salon info, account access, and users." />
-      {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
+      {status && <StatusAlert tone={status.tone} text={status.text} />}
       <div className="mb-4 flex flex-wrap gap-2 border-b">
         <Link
           href="/settings"

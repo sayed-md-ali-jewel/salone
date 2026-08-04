@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { StatusAlert } from "@/components/ui/status-alert";
 
 const PAGE_SIZE = 50;
 
@@ -52,7 +53,7 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
   return (
     <>
       <PageHeader title="Services" description="Create and manage salon service pricing." />
-      {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
+      {status && <StatusAlert tone={status.tone} text={status.text} />}
       <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
         <Card>
           <CardHeader><CardTitle>Add Service</CardTitle></CardHeader>

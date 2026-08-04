@@ -2,6 +2,7 @@ import { hasDatabaseUrl, prisma } from "@/lib/prisma";
 import { getCurrencyCode } from "@/lib/settings";
 import { EmployeeList } from "@/components/employees/employee-list";
 import { PageHeader } from "@/components/layout/page-header";
+import { StatusAlert } from "@/components/ui/status-alert";
 
 const PAGE_SIZE = 25;
 
@@ -50,7 +51,7 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
   return (
     <>
       <PageHeader title="Employees" description="Manage monthly and percentage-based staff salary rules." />
-      {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
+      {status && <StatusAlert tone={status.tone} text={status.text} />}
       <EmployeeList employees={employees} editingEmployee={editingEmployee} currentPage={page} totalItems={totalEmployees} pageSize={PAGE_SIZE} currencyCode={currencyCode} filters={{ name }} />
     </>
   );

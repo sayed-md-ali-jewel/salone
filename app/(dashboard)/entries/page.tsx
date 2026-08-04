@@ -1,6 +1,7 @@
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
 import { ServiceEntryList } from "@/components/entries/service-entry-list";
 import { PageHeader } from "@/components/layout/page-header";
+import { StatusAlert } from "@/components/ui/status-alert";
 
 const DEFAULT_PAGE_SIZE = 25;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -63,7 +64,7 @@ export default async function EntriesPage({ searchParams }: EntriesPageProps) {
   return (
     <>
       <PageHeader title="Daily Service Entry" description="Record customer services and calculate commission plus salon profit." />
-      {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
+      {status && <StatusAlert tone={status.tone} text={status.text} />}
       <ServiceEntryList
         customers={customers.map((customer) => ({ id: customer.id, name: customer.name }))}
         employees={employees.map((employee) => ({ id: employee.id, name: employee.name }))}

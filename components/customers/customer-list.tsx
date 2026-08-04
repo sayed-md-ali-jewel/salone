@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Banknote, Filter, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Banknote, Eye, Filter, Pencil, Plus, Trash2, X } from "lucide-react";
 import { createCustomer, createCustomerPayment, deleteCustomer, updateCustomer } from "@/lib/actions";
 import { formatCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,16 @@ type CustomerListItem = {
     paymentDate: Date | string;
     notes: string;
   }[];
+  serviceEntries: {
+    id: string;
+    serviceDate: Date | string;
+    amount: number;
+    commissionAmount: number;
+    salonProfit: number;
+    notes: string | null;
+    employee: { id: string; name: string };
+    service: { id: string; name: string };
+  }[];
 };
 
 type CustomerListProps = {
@@ -41,6 +51,7 @@ type CustomerListProps = {
 
 export function CustomerList({ customers, currentPage, totalItems, pageSize, currencyCode, filters }: CustomerListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [viewingCustomer, setViewingCustomer] = useState<CustomerListItem | null>(null);
   const [editingCustomer, setEditingCustomer] = useState<CustomerListItem | null>(null);
   const [payingCustomer, setPayingCustomer] = useState<CustomerListItem | null>(null);
   const preserveParams = {
@@ -49,6 +60,7 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, cur
     ...(filters.perPage !== "25" ? { perPage: filters.perPage } : {})
   };
   const paidAmount = (customer: CustomerListItem) => customer.customerPayments.reduce((total, payment) => total + Number(payment.amount), 0);
+  const serviceAmount = (customer: CustomerListItem) => customer.serviceEntries.reduce((total, entry) => total + Number(entry.amount), 0);
   const dueBalance = (customer: CustomerListItem) => Math.max(0, Number(customer.previousDue || 0) - paidAmount(customer));
   const formatDate = (value: Date | string) => {
     const date = new Date(value);
@@ -81,7 +93,7 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, cur
           </form>
           <div className="overflow-x-auto">
           <table className="w-full min-w-[1120px] text-sm">
-            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Name</th><th>Mobile</th><th>Address</th><th>Previous Due</th><th>Paid</th><th>Balance</th><th>Due Note</th><th className="sticky right-0 z-10 w-36 border-l bg-card text-center">Action</th></tr></thead>
+            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Name</th><th>Mobile</th><th>Address</th><th>Previous Due</th><th>Paid</th><th>Balance</th><th>Due Note</th><th className="sticky right-0 z-10 w-44 border-l bg-card text-center">Action</th></tr></thead>
             <tbody>
               {customers.length ? customers.map((customer) => (
                 <tr key={customer.id} className="border-b">
@@ -95,6 +107,7 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, cur
                   <td className="sticky right-0 z-10 border-l bg-card">
                     <div className="flex justify-center gap-1">
                       <Button variant="ghost" size="icon" type="button" disabled={dueBalance(customer) <= 0} onClick={() => setPayingCustomer(customer)}><Banknote className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" type="button" onClick={() => setViewingCustomer(customer)}><Eye className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" type="button" onClick={() => setEditingCustomer(customer)}><Pencil className="h-4 w-4" /></Button>
                       <form action={deleteCustomer}><input type="hidden" name="id" value={customer.id} /><Button variant="ghost" size="icon" type="submit"><Trash2 className="h-4 w-4" /></Button></form>
                     </div>
@@ -154,6 +167,75 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, cur
                 <Button type="submit">Update Customer</Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {viewingCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-md border bg-card p-5 shadow-lg">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold">{viewingCustomer.name}</h2>
+                <p className="text-sm text-muted-foreground">{viewingCustomer.mobile}{viewingCustomer.address ? ` · ${viewingCustomer.address}` : ""}</p>
+              </div>
+              <Button type="button" variant="ghost" size="icon" onClick={() => setViewingCustomer(null)}><X className="h-4 w-4" /></Button>
+            </div>
+            <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Previous Due</p><p className="text-lg font-semibold">{formatCurrency(Number(viewingCustomer.previousDue || 0), currencyCode)}</p></div>
+              <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Paid</p><p className="text-lg font-semibold">{formatCurrency(paidAmount(viewingCustomer), currencyCode)}</p></div>
+              <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Balance</p><p className="text-lg font-semibold">{formatCurrency(dueBalance(viewingCustomer), currencyCode)}</p></div>
+              <div className="rounded-md border p-3"><p className="text-xs text-muted-foreground">Service Total</p><p className="text-lg font-semibold">{formatCurrency(serviceAmount(viewingCustomer), currencyCode)}</p></div>
+            </div>
+            <div className="mb-4 rounded-md border p-3">
+              <p className="text-xs text-muted-foreground">Due Note</p>
+              <p className="text-sm">{viewingCustomer.previousDueNote || "-"}</p>
+            </div>
+            <div className="mb-4 flex justify-end">
+              {dueBalance(viewingCustomer) > 0 && (
+                <Button type="button" onClick={() => { setPayingCustomer(viewingCustomer); setViewingCustomer(null); }}>
+                  <Banknote className="h-4 w-4" />
+                  Pay Due
+                </Button>
+              )}
+            </div>
+            <div className="grid gap-4 xl:grid-cols-2">
+              <div className="rounded-md border p-3">
+                <h3 className="mb-2 text-sm font-medium">Due Payment Transactions</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[520px] text-sm">
+                    <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Amount</th><th>Note</th></tr></thead>
+                    <tbody>{viewingCustomer.customerPayments.length ? viewingCustomer.customerPayments.map((payment) => (
+                      <tr key={payment.id} className="border-b">
+                        <td className="py-2">{formatDate(payment.paymentDate)}</td>
+                        <td>{formatCurrency(Number(payment.amount), currencyCode)}</td>
+                        <td className="text-muted-foreground">{payment.notes}</td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan={3} className="py-5 text-center text-muted-foreground">No due payments yet.</td></tr>
+                    )}</tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="rounded-md border p-3">
+                <h3 className="mb-2 text-sm font-medium">Service Transactions</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[720px] text-sm">
+                    <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Service</th><th>Employee</th><th>Amount</th><th>Note</th></tr></thead>
+                    <tbody>{viewingCustomer.serviceEntries.length ? viewingCustomer.serviceEntries.map((entry) => (
+                      <tr key={entry.id} className="border-b">
+                        <td className="py-2">{formatDate(entry.serviceDate)}</td>
+                        <td>{entry.service.name}</td>
+                        <td>{entry.employee.name}</td>
+                        <td>{formatCurrency(Number(entry.amount), currencyCode)}</td>
+                        <td className="text-muted-foreground">{entry.notes || "-"}</td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan={5} className="py-5 text-center text-muted-foreground">No service transactions yet.</td></tr>
+                    )}</tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

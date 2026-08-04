@@ -2,6 +2,7 @@ import { hasDatabaseUrl, prisma } from "@/lib/prisma";
 import { getCurrencyCode } from "@/lib/settings";
 import { CustomerList } from "@/components/customers/customer-list";
 import { PageHeader } from "@/components/layout/page-header";
+import { StatusAlert } from "@/components/ui/status-alert";
 
 const DEFAULT_PAGE_SIZE = 25;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -51,7 +52,16 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
     ...(mobile ? { mobile: { contains: mobile } } : {})
   };
   const [customers, totalCustomers, currencyCode] = hasDatabaseUrl() ? await Promise.all([
-    prisma.customer.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * perPage, take: perPage, include: { customerPayments: { orderBy: { paymentDate: "desc" } } } }).catch(() => []),
+    prisma.customer.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * perPage,
+      take: perPage,
+      include: {
+        customerPayments: { orderBy: { paymentDate: "desc" } },
+        serviceEntries: { include: { employee: true, service: true }, orderBy: { serviceDate: "desc" } }
+      }
+    }).catch(() => []),
     prisma.customer.count({ where }).catch(() => 0),
     getCurrencyCode()
   ]) : [[], 0, "USD"];
@@ -59,7 +69,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   return (
     <>
       <PageHeader title="Customers" description="Add, edit and remove salon customers." />
-      {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
+      {status && <StatusAlert tone={status.tone} text={status.text} />}
       <CustomerList customers={customers} currentPage={page} totalItems={totalCustomers} pageSize={perPage} currencyCode={currencyCode} filters={{ name, mobile, perPage: String(perPage) }} />
     </>
   );

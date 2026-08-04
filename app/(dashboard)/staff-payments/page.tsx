@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { StatusAlert } from "@/components/ui/status-alert";
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
 import { getCurrencyCode } from "@/lib/settings";
 
@@ -130,7 +131,7 @@ export default async function StaffPaymentsPage({ searchParams }: StaffPaymentsP
   return (
     <>
       <PageHeader title="Staff Payments" description="Review staff payment amounts, pay employees, and track payment history." />
-      {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
+      {status && <StatusAlert tone={status.tone} text={status.text} />}
       <Card className="mb-4">
         <CardHeader><CardTitle>Filters</CardTitle></CardHeader>
         <CardContent>
