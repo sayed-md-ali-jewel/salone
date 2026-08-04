@@ -562,7 +562,12 @@ export async function payEmployee(formData: FormData) {
     category: "SALARY",
     amount,
     expenseDate: mongoDate(paymentDate),
-    notes: `Employee ID: ${employeeId}. Paid ${employee.name} for ${periodLabel}. Remaining before payment: ${remainingAmount.toFixed(2)}. After payment amount: ${remainingAfterPayment.toFixed(2)}.`
+    notes: [
+      `Employee ID: ${employeeId}.`,
+      `Paid ${employee.name} for ${periodLabel}.`,
+      `Remaining before payment: ${remainingAmount.toFixed(2)}.`,
+      remainingAfterPayment > 0 ? `After payment amount: ${remainingAfterPayment.toFixed(2)}.` : ""
+    ].filter(Boolean).join(" ")
   });
 
   revalidatePath("/expenses");

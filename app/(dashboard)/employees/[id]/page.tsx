@@ -72,8 +72,14 @@ function paymentHistoryNote(expense: { notes: string | null; amount: number }) {
 
   const before = Number(beforeMatch[1].replace(/,/g, ""));
   const after = afterMatch ? Number(afterMatch[1].replace(/,/g, "")) : Math.max(0, before - Number(expense.amount));
+  if (!Number.isFinite(before)) return "-";
 
-  return `Remaining before payment: ${before.toFixed(2)}. After payment amount: ${after.toFixed(2)}.`;
+  const parts = [`Remaining before payment: ${before.toFixed(2)}.`];
+  if (Number.isFinite(after) && after > 0) {
+    parts.push(`After payment amount: ${after.toFixed(2)}.`);
+  }
+
+  return parts.join(" ");
 }
 
 export default async function EmployeePage({ params, searchParams }: EmployeePageProps) {
