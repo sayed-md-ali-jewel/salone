@@ -1,1 +1,0 @@
-self.__NEXT_FONT_MANIFEST='{"pages":{},"app":{"/Users/apple/Desktop/personal/salone-mgt/app/layout":["static/media/7b0b24f36b1a6d0b-s.p.woff2"]},"appUsingSizeAdjust":true,"pagesUsingSizeAdjust":false}';
