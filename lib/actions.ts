@@ -216,6 +216,46 @@ export async function updateCustomer(formData: FormData) {
   });
 }
 
+export async function createCustomerPayment(formData: FormData) {
+  return runAction("createCustomerPayment", formData, async () => {
+    await requireUser();
+    const customerId = String(formData.get("customerId") || "");
+    const amount = validMoney(formData.get("amount"));
+    const paymentDateValue = String(formData.get("paymentDate") || "");
+    const paymentDate = paymentDateValue ? validDate(`${paymentDateValue}T00:00:00`) : new Date();
+    const notes = String(formData.get("notes") || "").trim();
+
+    if (!hasDatabaseUrl() || !isObjectId(customerId) || amount === null || amount <= 0 || !paymentDate || !notes) {
+      redirect("/customers?status=customer-payment-invalid");
+    }
+
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId },
+      include: { customerPayments: true }
+    });
+
+    if (!customer) redirect("/customers?status=customer-payment-invalid");
+
+    const previousDue = Number(customer.previousDue || 0);
+    const paidAmount = customer.customerPayments.reduce((total, payment) => total + Number(payment.amount), 0);
+    const balance = Math.max(0, previousDue - paidAmount);
+
+    if (amount > balance) redirect("/customers?status=customer-payment-invalid");
+
+    await insertOne("CustomerPayment", {
+      customerId: oid(customerId),
+      amount,
+      paymentDate: mongoDate(paymentDate),
+      notes
+    });
+
+    revalidatePath("/customers");
+    revalidatePath("/dashboard");
+    revalidatePath("/reports");
+    redirect("/customers?status=customer-payment-created");
+  });
+}
+
 export async function createEmployee(formData: FormData) {
   return runAction("createEmployee", formData, async () => {
   await requireUser(["ADMIN", "MANAGER"]);

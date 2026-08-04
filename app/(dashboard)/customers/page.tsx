@@ -30,7 +30,9 @@ function statusMessage(status: string) {
     "customer-created": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Customer added successfully." },
     "customer-updated": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Customer updated successfully." },
     "customer-deleted": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Customer deleted successfully." },
+    "customer-payment-created": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Customer payment added successfully." },
     "customer-exists": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "A customer with this mobile number already exists." },
+    "customer-payment-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter a valid customer payment amount and note." },
     "customer-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter customer name, mobile number, and a due note when previous due is added." },
     "customer-db-missing": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Database connection is required to save customers." }
   };
@@ -49,7 +51,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
     ...(mobile ? { mobile: { contains: mobile } } : {})
   };
   const [customers, totalCustomers, currencyCode] = hasDatabaseUrl() ? await Promise.all([
-    prisma.customer.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * perPage, take: perPage }).catch(() => []),
+    prisma.customer.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * perPage, take: perPage, include: { customerPayments: { orderBy: { paymentDate: "desc" } } } }).catch(() => []),
     prisma.customer.count({ where }).catch(() => 0),
     getCurrencyCode()
   ]) : [[], 0, "USD"];

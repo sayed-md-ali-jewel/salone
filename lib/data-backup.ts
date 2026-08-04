@@ -26,6 +26,7 @@ const csvFields = [
   "employeeId",
   "serviceId",
   "serviceDate",
+  "paymentDate",
   "amount",
   "commissionAmount",
   "salonProfit",
@@ -84,10 +85,11 @@ export function rowsToCsv(rows: BackupRow[]) {
 }
 
 export async function createBackupCsv() {
-  const [users, settings, customers, employees, services, expenses, serviceEntries] = await Promise.all([
+  const [users, settings, customers, customerPayments, employees, services, expenses, serviceEntries] = await Promise.all([
     prisma.user.findMany({ orderBy: { createdAt: "asc" } }),
     prisma.setting.findMany({ orderBy: { createdAt: "asc" } }),
     prisma.customer.findMany({ orderBy: { createdAt: "asc" } }),
+    prisma.customerPayment.findMany({ orderBy: { createdAt: "asc" } }),
     prisma.employee.findMany({ orderBy: { createdAt: "asc" } }),
     prisma.service.findMany({ orderBy: { createdAt: "asc" } }),
     prisma.expense.findMany({ orderBy: { createdAt: "asc" } }),
@@ -98,6 +100,7 @@ export async function createBackupCsv() {
     ...users.map((row) => ({ table: "User", ...row })),
     ...settings.map((row) => ({ table: "Setting", ...row })),
     ...customers.map((row) => ({ table: "Customer", ...row })),
+    ...customerPayments.map((row) => ({ table: "CustomerPayment", ...row })),
     ...employees.map((row) => ({ table: "Employee", ...row })),
     ...services.map((row) => ({ table: "Service", ...row })),
     ...expenses.map((row) => ({ table: "Expense", ...row })),
@@ -187,6 +190,7 @@ export async function restoreBackupCsv(csv: string) {
   const byTable = (table: string) => rows.filter((row) => row.table === table);
 
   await prisma.serviceEntry.deleteMany();
+  await prisma.customerPayment.deleteMany();
   await prisma.expense.deleteMany();
   await prisma.service.deleteMany();
   await prisma.employee.deleteMany();
@@ -224,6 +228,18 @@ export async function restoreBackupCsv(csv: string) {
       address: optionalString(row.address),
       previousDue: optionalNumber(row.previousDue),
       previousDueNote: optionalString(row.previousDueNote),
+      createdAt: dateValue(row.createdAt),
+      updatedAt: dateValue(row.updatedAt)
+    }))
+  });
+
+  await prisma.customerPayment.createMany({
+    data: byTable("CustomerPayment").map((row) => ({
+      id: requireId(row),
+      customerId: row.customerId,
+      amount: numberValue(row.amount),
+      paymentDate: dateValue(row.paymentDate),
+      notes: row.notes,
       createdAt: dateValue(row.createdAt),
       updatedAt: dateValue(row.updatedAt)
     }))
