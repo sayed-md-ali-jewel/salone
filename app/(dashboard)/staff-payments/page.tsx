@@ -31,6 +31,14 @@ function pageNumber(value: string | undefined) {
   return Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
 }
 
+function statusMessage(status: string) {
+  const messages: Record<string, { tone: string; text: string }> = {
+    "payment-created": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Staff payment saved successfully." },
+    "payment-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter a valid staff payment amount and date." }
+  };
+  return messages[status];
+}
+
 function dateRange(date: string | undefined, month: string | undefined) {
   if (date) {
     const from = startOfDay(new Date(`${date}T00:00:00`));
@@ -73,6 +81,7 @@ export default async function StaffPaymentsPage({ searchParams }: StaffPaymentsP
   const selectedDate = searchValue(params, "date") || "";
   const selectedMonth = searchValue(params, "month") || "";
   const historyPage = pageNumber(searchValue(params, "historyPage"));
+  const status = statusMessage(searchValue(params, "status") || "");
   const selectedRange = dateRange(selectedDate, selectedMonth);
 
   const [employees, salaryExpenses, currencyCode] = hasDatabaseUrl() ? await Promise.all([
@@ -121,6 +130,7 @@ export default async function StaffPaymentsPage({ searchParams }: StaffPaymentsP
   return (
     <>
       <PageHeader title="Staff Payments" description="Review staff payment amounts, pay employees, and track payment history." />
+      {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
       <Card className="mb-4">
         <CardHeader><CardTitle>Filters</CardTitle></CardHeader>
         <CardContent>
@@ -165,7 +175,7 @@ export default async function StaffPaymentsPage({ searchParams }: StaffPaymentsP
         <Card>
           <CardHeader><CardTitle>Payment History</CardTitle></CardHeader>
           <CardContent className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[780px] text-sm">
               <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Paid Date</th><th>Title</th><th>Amount</th><th>Notes</th></tr></thead>
               <tbody>{paginatedPaymentHistory.length ? paginatedPaymentHistory.map((expense) => (
                 <tr key={expense.id} className="border-b">

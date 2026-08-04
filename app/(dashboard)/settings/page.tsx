@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Download, Upload } from "lucide-react";
 import { changeOwnPassword, saveSettings } from "@/lib/actions";
 import { requireUser } from "@/lib/auth";
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
@@ -27,7 +28,12 @@ function statusMessage(status: string) {
     "password-updated": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Password changed successfully." },
     "password-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "New password must be at least 6 characters and match the confirmation." },
     "password-current": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Current password is incorrect." },
-    "password-unavailable": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "This account password cannot be changed from the database settings page." }
+    "password-unavailable": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "This account password cannot be changed from the database settings page." },
+    "settings-saved": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Settings saved successfully." },
+    "backup-db-missing": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Database connection is required for backup import or export." },
+    "import-success": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "CSV backup imported successfully." },
+    "import-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please choose a CSV backup file to import." },
+    "import-failed": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "CSV import failed. Check the file format and try again." }
   };
   return messages[status];
 }
@@ -96,6 +102,39 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                   </div>
                   <Button type="submit">Change Password</Button>
                 </form>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>CSV Backup</CardTitle></CardHeader>
+              <CardContent className="grid gap-4 lg:grid-cols-2">
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="text-sm font-medium">Export Data</h3>
+                    <p className="text-sm text-muted-foreground">Download a full CSV backup and save a copy in salone_backup.</p>
+                  </div>
+                  <Button asChild variant="outline">
+                    <a href="/api/settings/data/export-csv">
+                      <Download className="h-4 w-4" />
+                      Export CSV
+                    </a>
+                  </Button>
+                </div>
+                {user.role === "ADMIN" && (
+                  <form action="/api/settings/data/import-csv" method="post" encType="multipart/form-data" className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-medium">Import Data</h3>
+                      <p className="text-sm text-muted-foreground">Restore from an exported CSV. A pre-import backup is saved first.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="backupFile">CSV File</Label>
+                      <Input id="backupFile" name="backupFile" type="file" accept=".csv,text/csv" required />
+                    </div>
+                    <Button type="submit">
+                      <Upload className="h-4 w-4" />
+                      Import CSV
+                    </Button>
+                  </form>
+                )}
               </CardContent>
             </Card>
           </>

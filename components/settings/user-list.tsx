@@ -29,7 +29,7 @@ export function UserList({ users }: { users: UserListItem[] }) {
           </Button>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
                 <th className="py-2">Name</th>

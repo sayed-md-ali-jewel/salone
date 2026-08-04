@@ -46,12 +46,12 @@ export function PaymentTable({ rows, selectedDate, selectedMonth, currencyCode }
   return (
     <>
       <p className="mb-3 text-sm text-muted-foreground">Percentage staff are paid commission. Monthly staff are paid salary only when a month is selected.</p>
-      <table className="w-full text-sm">
-        <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Staff</th><th>Type</th><th>Services</th><th>Income</th><th>Commission</th><th>Salary</th><th>Paid</th><th>Due</th><th></th></tr></thead>
+      <table className="w-full min-w-[1120px] text-sm">
+        <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Staff</th><th>Type</th><th>Services</th><th>Income</th><th>Commission</th><th>Salary</th><th>Paid</th><th>Due</th><th className="sticky right-0 z-10 border-l bg-card text-center">Action</th></tr></thead>
         <tbody>{rows.map((row) => (
           <tr key={row.id} className="border-b">
             <td className="py-3 font-medium">{row.name}</td><td>{row.salaryType}</td><td>{row.services}</td><td>{formatCurrency(row.income, currencyCode)}</td><td>{formatCurrency(row.commissionPayment, currencyCode)}</td><td>{formatCurrency(row.monthlyPayment, currencyCode)}</td><td>{formatCurrency(row.paidAmount, currencyCode)}</td><td className="font-semibold">{formatCurrency(row.totalPayment, currencyCode)}</td>
-            <td className="text-right">
+            <td className="sticky right-0 z-10 border-l bg-card text-right">
               <Button type="button" size="sm" disabled={row.totalPayment <= 0} onClick={() => openPaymentModal(row)}><Banknote className="h-4 w-4" />Pay</Button>
             </td>
           </tr>

@@ -18,12 +18,24 @@ function pageNumber(value: string | undefined) {
   return Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
 }
 
+function statusMessage(status: string) {
+  const messages: Record<string, { tone: string; text: string }> = {
+    "expense-created": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Expense added successfully." },
+    "expense-updated": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Expense updated successfully." },
+    "expense-deleted": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Expense deleted successfully." },
+    "expense-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter a valid title, category, amount, and date." },
+    "expense-db-missing": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Database connection is required to save expenses." }
+  };
+  return messages[status];
+}
+
 export default async function ExpensesPage({ searchParams }: ExpensesPageProps) {
   const params = await searchParams;
   const page = pageNumber(searchValue(params, "page"));
   const fromDate = searchValue(params, "fromDate") || "";
   const toDate = searchValue(params, "toDate") || "";
   const category = searchValue(params, "category") || "";
+  const status = statusMessage(searchValue(params, "status") || "");
   const from = fromDate ? new Date(`${fromDate}T00:00:00`) : null;
   const to = toDate ? new Date(`${toDate}T00:00:00`) : null;
   if (to) to.setDate(to.getDate() + 1);
@@ -39,6 +51,7 @@ export default async function ExpensesPage({ searchParams }: ExpensesPageProps) 
   return (
     <>
       <PageHeader title="Expenses" description="Track rent, salary, product, utility and other salon costs." />
+      {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
       <ExpenseList expenses={expenses} currentPage={page} totalItems={totalExpenses} pageSize={PAGE_SIZE} filters={{ fromDate, toDate, category }} />
     </>
   );

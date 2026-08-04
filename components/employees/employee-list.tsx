@@ -64,13 +64,13 @@ export function EmployeeList({ employees, editingEmployee, currentPage, totalIte
             <Button asChild variant="outline"><Link href="/employees"><X className="h-4 w-4" />Reset</Link></Button>
           </form>
           <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Name</th><th>Type</th><th>Salary</th><th>Commission</th><th></th></tr></thead>
+          <table className="w-full min-w-[760px] text-sm">
+            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Name</th><th>Type</th><th>Salary</th><th>Commission</th><th className="sticky right-0 z-10 border-l bg-card text-center">Action</th></tr></thead>
             <tbody>{employees.length ? employees.map((employee) => (
               <tr key={employee.id} className="border-b">
                 <td className="py-3 font-medium">{employee.name}</td><td><Badge>{employee.salaryType}</Badge></td><td>{employee.monthlySalary ? formatCurrency(Number(employee.monthlySalary), currencyCode) : "-"}</td><td>{employee.commissionRate ? `${employee.commissionRate}%` : "-"}</td>
-                <td>
-                  <div className="flex justify-end gap-1">
+                <td className="sticky right-0 z-10 border-l bg-card">
+                  <div className="flex justify-center gap-1">
                     <Button asChild variant="ghost" size="icon"><Link href={`/employees/${employee.id}` as Route}><Eye className="h-4 w-4" /></Link></Button>
                     <Button asChild variant="ghost" size="icon"><Link href={employeeEditPath(currentPage, employee.id)}><Pencil className="h-4 w-4" /></Link></Button>
                     <form action={deleteEmployee}><input type="hidden" name="id" value={employee.id} /><Button variant="ghost" size="icon" type="submit"><Trash2 className="h-4 w-4" /></Button></form>

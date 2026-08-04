@@ -24,15 +24,27 @@ function pageSize(value: string | undefined) {
   return PAGE_SIZE_OPTIONS.includes(size) ? size : DEFAULT_PAGE_SIZE;
 }
 
+function statusMessage(status: string) {
+  const messages: Record<string, { tone: string; text: string }> = {
+    "entry-created": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Service entry added successfully." },
+    "entry-updated": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Service entry updated successfully." },
+    "entry-deleted": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Service entry deleted successfully." },
+    "entry-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter a valid customer, employee, service, amount, and date." },
+    "entry-db-missing": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Database connection is required to save service entries." }
+  };
+  return messages[status];
+}
+
 export default async function EntriesPage({ searchParams }: EntriesPageProps) {
   const params = await searchParams;
   const page = pageNumber(searchValue(params, "page"));
   const perPage = pageSize(searchValue(params, "perPage"));
   const selectedServiceId = searchValue(params, "serviceId") || "";
-  const employeeName = (searchValue(params, "employeeName") || "").trim();
+  const selectedEmployeeId = searchValue(params, "employeeId") || "";
+  const status = statusMessage(searchValue(params, "status") || "");
   const where = {
     ...(selectedServiceId ? { serviceId: selectedServiceId } : {}),
-    ...(employeeName ? { employee: { name: { contains: employeeName } } } : {})
+    ...(selectedEmployeeId ? { employeeId: selectedEmployeeId } : {})
   };
   const [customers, employees, services, entries, totalEntries] = hasDatabaseUrl() ? await Promise.all([
     prisma.customer.findMany({ orderBy: { name: "asc" } }).catch(() => []),
@@ -51,6 +63,7 @@ export default async function EntriesPage({ searchParams }: EntriesPageProps) {
   return (
     <>
       <PageHeader title="Daily Service Entry" description="Record customer services and calculate commission plus salon profit." />
+      {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
       <ServiceEntryList
         customers={customers.map((customer) => ({ id: customer.id, name: customer.name }))}
         employees={employees.map((employee) => ({ id: employee.id, name: employee.name }))}
@@ -59,7 +72,7 @@ export default async function EntriesPage({ searchParams }: EntriesPageProps) {
         currentPage={page}
         totalItems={totalEntries}
         pageSize={perPage}
-        filters={{ serviceId: selectedServiceId, employeeName, perPage: String(perPage) }}
+        filters={{ serviceId: selectedServiceId, employeeId: selectedEmployeeId, perPage: String(perPage) }}
       />
     </>
   );

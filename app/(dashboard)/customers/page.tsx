@@ -24,12 +24,25 @@ function pageSize(value: string | undefined) {
   return PAGE_SIZE_OPTIONS.includes(size) ? size : DEFAULT_PAGE_SIZE;
 }
 
+function statusMessage(status: string) {
+  const messages: Record<string, { tone: string; text: string }> = {
+    "customer-created": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Customer added successfully." },
+    "customer-updated": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Customer updated successfully." },
+    "customer-deleted": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Customer deleted successfully." },
+    "customer-exists": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "A customer with this mobile number already exists." },
+    "customer-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter both customer name and mobile number." },
+    "customer-db-missing": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Database connection is required to save customers." }
+  };
+  return messages[status];
+}
+
 export default async function CustomersPage({ searchParams }: CustomersPageProps) {
   const params = await searchParams;
   const page = pageNumber(searchValue(params, "page"));
   const perPage = pageSize(searchValue(params, "perPage"));
   const name = (searchValue(params, "name") || "").trim();
   const mobile = (searchValue(params, "mobile") || "").trim();
+  const status = statusMessage(searchValue(params, "status") || "");
   const where = {
     ...(name ? { name: { contains: name } } : {}),
     ...(mobile ? { mobile: { contains: mobile } } : {})
@@ -42,6 +55,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   return (
     <>
       <PageHeader title="Customers" description="Add, edit and remove salon customers." />
+      {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
       <CustomerList customers={customers} currentPage={page} totalItems={totalCustomers} pageSize={perPage} filters={{ name, mobile, perPage: String(perPage) }} />
     </>
   );

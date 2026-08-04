@@ -128,7 +128,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         <Card>
           <CardHeader><CardTitle>Income / Expense / Profit</CardTitle></CardHeader>
           <CardContent className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[760px] text-sm">
               <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Period</th><th>Income</th><th>Expense</th><th>Commission</th><th>Profit</th></tr></thead>
               <tbody>{reportRows.map((row) => (
                 <tr key={row.period} className="border-b"><td className="py-3 font-medium">{row.period}</td><td>{currency(row.income)}</td><td>{currency(row.expense)}</td><td>{currency(row.commission)}</td><td className="font-semibold">{currency(row.profit)}</td></tr>
@@ -140,7 +140,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
       <Card className="mt-4">
         <CardHeader><CardTitle>Filtered Income and Staff Payment Details</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[980px] text-sm">
             <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Staff</th><th>Customer</th><th>Service</th><th>Income</th><th>Staff Payment</th><th>Profit</th></tr></thead>
             <tbody>{filteredEntries.length ? filteredEntries.map((entry) => (
               <tr key={entry.id} className="border-b">

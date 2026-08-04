@@ -128,7 +128,7 @@ export default async function EmployeePage({ params, searchParams }: EmployeePag
         <Card>
           <CardHeader><CardTitle>Payment History</CardTitle></CardHeader>
           <CardContent className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[720px] text-sm">
               <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Paid Date</th><th>Amount</th><th>Notes</th></tr></thead>
               <tbody>{paymentHistory.length ? paymentHistory.map((expense) => (
                 <tr key={expense.id} className="border-b"><td className="py-3">{expense.expenseDate.toLocaleDateString()}</td><td className="font-medium">{formatCurrency(Number(expense.amount), currencyCode)}</td><td className="min-w-56 text-muted-foreground">{expense.notes || "-"}</td></tr>
@@ -142,7 +142,7 @@ export default async function EmployeePage({ params, searchParams }: EmployeePag
       <Card className="mt-4">
         <CardHeader><CardTitle>Service History</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Customer</th><th>Service</th><th>Income</th><th>Commission</th><th>Profit</th></tr></thead>
             <tbody>{serviceEntries.length ? serviceEntries.map((entry) => (
               <tr key={entry.id} className="border-b"><td className="py-3">{entry.serviceDate.toLocaleDateString()}</td><td>{entry.customer.name}</td><td>{entry.service.name}</td><td>{formatCurrency(Number(entry.amount), currencyCode)}</td><td>{formatCurrency(Number(entry.commissionAmount), currencyCode)}</td><td className="font-medium">{formatCurrency(Number(entry.salonProfit), currencyCode)}</td></tr>
