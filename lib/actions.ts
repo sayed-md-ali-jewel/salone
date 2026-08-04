@@ -3,7 +3,7 @@
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 
@@ -65,6 +65,33 @@ function settingsRedirect(status: string, tab?: string): never {
   redirect(`/settings?${tab ? `tab=${tab}&` : ""}status=${status}`);
 }
 
+function formDataSnapshot(formData: FormData) {
+  const hiddenFields = new Set(["password", "currentPassword", "newPassword", "confirmPassword"]);
+  return Object.fromEntries(
+    Array.from(formData.entries()).map(([key, value]) => [
+      key,
+      hiddenFields.has(key)
+        ? "[redacted]"
+        : typeof File !== "undefined" && value instanceof File
+          ? `[file:${value.name}:${value.size}]`
+          : String(value)
+    ])
+  );
+}
+
+async function runAction(actionName: string, formData: FormData, action: () => Promise<void>) {
+  try {
+    await action();
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error(`[server-action:${actionName}]`, {
+      fields: formDataSnapshot(formData),
+      error
+    });
+    throw error;
+  }
+}
+
 function paymentDateRange(date: string, month: string) {
   if (date) {
     const from = validDate(`${date}T00:00:00`);
@@ -99,83 +126,90 @@ function isStaffPaymentForPeriod(expense: { title: string; notes: string | null 
 }
 
 export async function createCustomer(formData: FormData) {
-  await requireUser();
-  if (!hasDatabaseUrl()) redirect("/customers?status=customer-db-missing");
-  const name = String(formData.get("name") || "").trim();
-  const mobile = String(formData.get("mobile") || "").trim();
-  const address = String(formData.get("address") || "").trim();
+  return runAction("createCustomer", formData, async () => {
+    await requireUser();
+    if (!hasDatabaseUrl()) redirect("/customers?status=customer-db-missing");
+    const name = String(formData.get("name") || "").trim();
+    const mobile = String(formData.get("mobile") || "").trim();
+    const address = String(formData.get("address") || "").trim();
 
-  if (!name || !mobile) {
-    redirect("/customers?status=customer-invalid");
-  }
+    if (!name || !mobile) {
+      redirect("/customers?status=customer-invalid");
+    }
 
-  const existingCustomer = await prisma.customer.findUnique({ where: { mobile } });
+    const existingCustomer = await prisma.customer.findUnique({ where: { mobile } });
 
-  if (existingCustomer) {
-    redirect("/customers?status=customer-exists");
-  }
+    if (existingCustomer) {
+      redirect("/customers?status=customer-exists");
+    }
 
-  await insertOne("Customer", {
-    name,
-    mobile,
-    address
+    await insertOne("Customer", {
+      name,
+      mobile,
+      address
+    });
+    revalidatePath("/customers");
+    redirect("/customers?status=customer-created");
   });
-  revalidatePath("/customers");
-  redirect("/customers?status=customer-created");
 }
 
 export async function deleteCustomer(formData: FormData) {
+  return runAction("deleteCustomer", formData, async () => {
   await requireUser(["ADMIN", "MANAGER"]);
   const id = String(formData.get("id") || "");
   if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/customers?status=customer-invalid");
   await deleteOne("Customer", id);
   revalidatePath("/customers");
   redirect("/customers?status=customer-deleted");
+  });
 }
 
 export async function updateCustomer(formData: FormData) {
-  await requireUser();
-  const id = String(formData.get("id") || "");
-  if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/customers?status=customer-invalid");
-  const name = String(formData.get("name") || "").trim();
-  const mobile = String(formData.get("mobile") || "").trim();
-  const address = String(formData.get("address") || "").trim();
+  return runAction("updateCustomer", formData, async () => {
+    await requireUser();
+    const id = String(formData.get("id") || "");
+    if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/customers?status=customer-invalid");
+    const name = String(formData.get("name") || "").trim();
+    const mobile = String(formData.get("mobile") || "").trim();
+    const address = String(formData.get("address") || "").trim();
 
-  if (!name || !mobile) {
-    redirect("/customers?status=customer-invalid");
-  }
+    if (!name || !mobile) {
+      redirect("/customers?status=customer-invalid");
+    }
 
-  const existingCustomer = await prisma.customer.findUnique({ where: { mobile } });
+    const existingCustomer = await prisma.customer.findUnique({ where: { mobile } });
 
-  if (existingCustomer && existingCustomer.id !== id) {
-    redirect("/customers?status=customer-exists");
-  }
+    if (existingCustomer && existingCustomer.id !== id) {
+      redirect("/customers?status=customer-exists");
+    }
 
-  await prisma.$runCommandRaw({
-    update: "Customer",
-    updates: [
-      {
-        q: { _id: oid(id) },
-        u: {
-          $set: {
-            name,
-            mobile,
-            address,
-            updatedAt: mongoDate()
+    await prisma.$runCommandRaw({
+      update: "Customer",
+      updates: [
+        {
+          q: { _id: oid(id) },
+          u: {
+            $set: {
+              name,
+              mobile,
+              address,
+              updatedAt: mongoDate()
+            }
           }
         }
-      }
-    ]
-  });
+      ]
+    });
 
-  revalidatePath("/customers");
-  revalidatePath("/entries");
-  revalidatePath("/dashboard");
-  revalidatePath("/reports");
-  redirect("/customers?status=customer-updated");
+    revalidatePath("/customers");
+    revalidatePath("/entries");
+    revalidatePath("/dashboard");
+    revalidatePath("/reports");
+    redirect("/customers?status=customer-updated");
+  });
 }
 
 export async function createEmployee(formData: FormData) {
+  return runAction("createEmployee", formData, async () => {
   await requireUser(["ADMIN", "MANAGER"]);
   if (!hasDatabaseUrl()) redirect("/employees?status=employee-db-missing");
   const name = String(formData.get("name") || "").trim();
@@ -201,9 +235,11 @@ export async function createEmployee(formData: FormData) {
   });
   revalidatePath("/employees");
   redirect("/employees?status=employee-created");
+  });
 }
 
 export async function updateEmployee(formData: FormData) {
+  return runAction("updateEmployee", formData, async () => {
   await requireUser(["ADMIN", "MANAGER"]);
   const id = String(formData.get("id") || "");
   if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/employees?status=employee-invalid");
@@ -244,18 +280,22 @@ export async function updateEmployee(formData: FormData) {
   revalidatePath("/reports");
   revalidatePath("/staff-payments");
   redirect("/employees?status=employee-updated");
+  });
 }
 
 export async function deleteEmployee(formData: FormData) {
+  return runAction("deleteEmployee", formData, async () => {
   await requireUser(["ADMIN", "MANAGER"]);
   const id = String(formData.get("id") || "");
   if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/employees?status=employee-invalid");
   await deleteOne("Employee", id);
   revalidatePath("/employees");
   redirect("/employees?status=employee-deleted");
+  });
 }
 
 export async function createService(formData: FormData) {
+  return runAction("createService", formData, async () => {
   await requireUser(["ADMIN", "MANAGER"]);
   if (!hasDatabaseUrl()) redirect("/services?status=service-db-missing");
   const name = String(formData.get("name") || "").trim();
@@ -273,9 +313,11 @@ export async function createService(formData: FormData) {
   });
   revalidatePath("/services");
   redirect("/services?status=service-created");
+  });
 }
 
 export async function updateService(formData: FormData) {
+  return runAction("updateService", formData, async () => {
   await requireUser(["ADMIN", "MANAGER"]);
   const id = String(formData.get("id") || "");
   if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/services?status=service-invalid");
@@ -308,18 +350,22 @@ export async function updateService(formData: FormData) {
   revalidatePath("/entries");
   revalidatePath("/reports");
   redirect("/services?status=service-updated");
+  });
 }
 
 export async function deleteService(formData: FormData) {
+  return runAction("deleteService", formData, async () => {
   await requireUser(["ADMIN", "MANAGER"]);
   const id = String(formData.get("id") || "");
   if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/services?status=service-invalid");
   await deleteOne("Service", id);
   revalidatePath("/services");
   redirect("/services?status=service-deleted");
+  });
 }
 
 export async function createExpense(formData: FormData) {
+  return runAction("createExpense", formData, async () => {
   await requireUser();
   if (!hasDatabaseUrl()) redirect("/expenses?status=expense-db-missing");
   const title = String(formData.get("title") || "").trim();
@@ -344,9 +390,11 @@ export async function createExpense(formData: FormData) {
   revalidatePath("/expenses");
   revalidatePath("/dashboard");
   redirect("/expenses?status=expense-created");
+  });
 }
 
 export async function updateExpense(formData: FormData) {
+  return runAction("updateExpense", formData, async () => {
   await requireUser();
   const id = String(formData.get("id") || "");
   if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/expenses?status=expense-invalid");
@@ -386,9 +434,11 @@ export async function updateExpense(formData: FormData) {
   revalidatePath("/reports");
   revalidatePath("/staff-payments");
   redirect("/expenses?status=expense-updated");
+  });
 }
 
 export async function deleteExpense(formData: FormData) {
+  return runAction("deleteExpense", formData, async () => {
   await requireUser();
   const id = String(formData.get("id") || "");
   if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/expenses?status=expense-invalid");
@@ -396,9 +446,11 @@ export async function deleteExpense(formData: FormData) {
   revalidatePath("/expenses");
   revalidatePath("/dashboard");
   redirect("/expenses?status=expense-deleted");
+  });
 }
 
 export async function payEmployee(formData: FormData) {
+  return runAction("payEmployee", formData, async () => {
   await requireUser(["ADMIN", "MANAGER"]);
 
   const employeeId = String(formData.get("employeeId") || "");
@@ -462,9 +514,11 @@ export async function payEmployee(formData: FormData) {
   revalidatePath("/staff-payments");
   revalidatePath(`/employees/${employeeId}`);
   redirect("/staff-payments?status=payment-created");
+  });
 }
 
 export async function createServiceEntry(formData: FormData) {
+  return runAction("createServiceEntry", formData, async () => {
   await requireUser();
   if (!hasDatabaseUrl()) redirect("/entries?status=entry-db-missing");
   const serviceId = String(formData.get("serviceId") || "");
@@ -529,9 +583,11 @@ export async function createServiceEntry(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/reports");
   redirect("/entries?status=entry-created");
+  });
 }
 
 export async function updateServiceEntry(formData: FormData) {
+  return runAction("updateServiceEntry", formData, async () => {
   await requireUser();
   const id = String(formData.get("id") || "");
   const customerId = String(formData.get("customerId") || "");
@@ -586,9 +642,11 @@ export async function updateServiceEntry(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/reports");
   redirect("/entries?status=entry-updated");
+  });
 }
 
 export async function deleteServiceEntry(formData: FormData) {
+  return runAction("deleteServiceEntry", formData, async () => {
   await requireUser();
   const id = String(formData.get("id") || "");
   if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/entries?status=entry-invalid");
@@ -597,9 +655,11 @@ export async function deleteServiceEntry(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/reports");
   redirect("/entries?status=entry-deleted");
+  });
 }
 
 export async function saveSettings(formData: FormData) {
+  return runAction("saveSettings", formData, async () => {
   await requireUser(["ADMIN", "MANAGER"]);
   const entries = [
     ["salonName", String(formData.get("salonName") || "")],
@@ -629,9 +689,11 @@ export async function saveSettings(formData: FormData) {
 
   revalidatePath("/settings");
   settingsRedirect("settings-saved");
+  });
 }
 
 export async function createUser(formData: FormData) {
+  return runAction("createUser", formData, async () => {
   await requireUser(["ADMIN"]);
 
   const name = String(formData.get("name") || "").trim();
@@ -654,9 +716,11 @@ export async function createUser(formData: FormData) {
 
   revalidatePath("/settings");
   settingsRedirect("user-created", "users");
+  });
 }
 
 export async function changeOwnPassword(formData: FormData) {
+  return runAction("changeOwnPassword", formData, async () => {
   const user = await requireUser();
   const currentPassword = String(formData.get("currentPassword") || "");
   const newPassword = String(formData.get("newPassword") || "");
@@ -687,4 +751,5 @@ export async function changeOwnPassword(formData: FormData) {
 
   revalidatePath("/settings");
   settingsRedirect("password-updated");
+  });
 }
