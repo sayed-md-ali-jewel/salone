@@ -10,17 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-      FTP_SERVER: ${{ secrets.FTP_SERVER }}
-      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-      FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL || 'ftp' }}
-      FTP_PORT: ${{ secrets.FTP_PORT || '21' }}
-      SERVER_DIR: ${{ secrets.SERVER_DIR || '/public_html/royalearab' }}
+      DATABASE_URL: ${{ vars.DATABASE_URL }}
+      JWT_SECRET: ${{ vars.JWT_SECRET }}
+      ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+      ADMIN_PASSWORD: ${{ vars.ADMIN_PASSWORD }}
+      NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+      FTP_SERVER: ${{ vars.FTP_SERVER }}
+      FTP_USERNAME: ${{ vars.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ vars.FTP_PASSWORD }}
+      FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'ftp' }}
+      FTP_PORT: ${{ vars.FTP_PORT || '21' }}
+      SERVER_DIR: ${{ vars.SERVER_DIR || '/public_html/royalearab' }}
 
     steps:
       - name: Checkout code
