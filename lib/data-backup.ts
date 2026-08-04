@@ -18,10 +18,10 @@ const csvFields = [
   "salaryType",
   "monthlySalary",
   "commissionRate",
+  "joiningDate",
   "dueSalary",
   "dueSalaryNote",
   "price",
-  "defaultRate",
   "customerId",
   "employeeId",
   "serviceId",
@@ -251,6 +251,7 @@ export async function restoreBackupCsv(csv: string) {
       name: row.name,
       mobile: optionalString(row.mobile),
       salaryType: salaryTypeValue(row.salaryType),
+      joiningDate: row.joiningDate ? dateValue(row.joiningDate) : null,
       monthlySalary: optionalNumber(row.monthlySalary),
       commissionRate: optionalNumber(row.commissionRate),
       dueSalary: optionalNumber(row.dueSalary),
@@ -265,7 +266,6 @@ export async function restoreBackupCsv(csv: string) {
       id: requireId(row),
       name: row.name,
       price: numberValue(row.price),
-      defaultRate: numberValue(row.defaultRate),
       createdAt: dateValue(row.createdAt),
       updatedAt: dateValue(row.updatedAt)
     }))

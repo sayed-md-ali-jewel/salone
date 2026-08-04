@@ -77,18 +77,18 @@ async function main() {
   await insert("Customer", customers.map(withBase));
 
   const employees = [
-    { id: objectId(), name: "Rima Sultana", mobile: "01822000001", salaryType: "PERCENTAGE", monthlySalary: null, commissionRate: 25 },
-    { id: objectId(), name: "Tanvir Ahmed", mobile: "01822000002", salaryType: "MONTHLY", monthlySalary: 25000, commissionRate: null },
-    { id: objectId(), name: "Maliha Khan", mobile: "01822000003", salaryType: "PERCENTAGE", monthlySalary: null, commissionRate: 30 }
+    { id: objectId(), name: "Rima Sultana", mobile: "01822000001", joiningDate: mongoDate(daysAgo(90)), salaryType: "PERCENTAGE", monthlySalary: null, commissionRate: 25 },
+    { id: objectId(), name: "Tanvir Ahmed", mobile: "01822000002", joiningDate: mongoDate(daysAgo(120)), salaryType: "MONTHLY", monthlySalary: 25000, commissionRate: null },
+    { id: objectId(), name: "Maliha Khan", mobile: "01822000003", joiningDate: mongoDate(daysAgo(60)), salaryType: "PERCENTAGE", monthlySalary: null, commissionRate: 30 }
   ];
   await insert("Employee", employees.map(withBase));
 
   const services = [
-    { id: objectId(), name: "Hair Cut", price: 500, defaultRate: 15 },
-    { id: objectId(), name: "Hair Color", price: 2500, defaultRate: 20 },
-    { id: objectId(), name: "Facial", price: 1800, defaultRate: 18 },
-    { id: objectId(), name: "Manicure", price: 800, defaultRate: 12 },
-    { id: objectId(), name: "Bridal Makeup", price: 12000, defaultRate: 25 }
+    { id: objectId(), name: "Hair Cut", price: 500 },
+    { id: objectId(), name: "Hair Color", price: 2500 },
+    { id: objectId(), name: "Facial", price: 1800 },
+    { id: objectId(), name: "Manicure", price: 800 },
+    { id: objectId(), name: "Bridal Makeup", price: 12000 }
   ];
   await insert("Service", services.map(withBase));
 

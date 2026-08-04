@@ -62,6 +62,12 @@ function paidForEmployeePeriod(expenses: { title: string; notes: string | null; 
   }), (expense) => Number(expense.amount));
 }
 
+function formatDate(value: Date | string | null) {
+  if (!value) return "-";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+}
+
 export default async function EmployeePage({ params, searchParams }: EmployeePageProps) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const selectedDate = searchValue(query, "date") || "";
@@ -101,7 +107,8 @@ export default async function EmployeePage({ params, searchParams }: EmployeePag
   return (
     <>
       <PageHeader title={employee.name} description="Review employee activity, payment amount, and payment history." action={<Button asChild variant="outline"><Link href="/employees"><ArrowLeft className="h-4 w-4" />Employees</Link></Button>} />
-      <div className="mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Joining Date</CardTitle></CardHeader><CardContent><div className="text-2xl font-semibold">{formatDate(employee.joiningDate)}</div></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Salary Type</CardTitle></CardHeader><CardContent><Badge>{employee.salaryType}</Badge></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Filtered Income</CardTitle></CardHeader><CardContent><div className="text-2xl font-semibold">{formatCurrency(paymentRow.income, currencyCode)}</div></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Payment Due</CardTitle></CardHeader><CardContent><div className="text-2xl font-semibold">{formatCurrency(paymentRow.totalPayment, currencyCode)}</div></CardContent></Card>

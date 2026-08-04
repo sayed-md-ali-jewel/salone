@@ -6,14 +6,12 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { formatCurrency } from "@/lib/currency";
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
+import { getCurrencyCode } from "@/lib/settings";
 
 function sum<T>(items: T[], getValue: (item: T) => number) {
   return items.reduce((total, item) => total + getValue(item), 0);
-}
-
-function currency(value: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 }
 
 type ReportsPageProps = {
@@ -50,11 +48,12 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const selectedMonth = searchValue(params, "month") || "";
   const selectedRange = dateRange(selectedDate, selectedMonth);
 
-  const [entries, expenses, employees] = hasDatabaseUrl() ? await Promise.all([
+  const [entries, expenses, employees, currencyCode] = hasDatabaseUrl() ? await Promise.all([
     prisma.serviceEntry.findMany({ include: { customer: true, employee: true, service: true }, orderBy: { serviceDate: "desc" } }).catch(() => []),
     prisma.expense.findMany({ orderBy: { expenseDate: "desc" } }).catch(() => []),
-    prisma.employee.findMany({ include: { serviceEntries: true }, orderBy: { name: "asc" } }).catch(() => [])
-  ]) : [[], [], []];
+    prisma.employee.findMany({ include: { serviceEntries: true }, orderBy: { name: "asc" } }).catch(() => []),
+    getCurrencyCode()
+  ]) : [[], [], [], "USD"];
 
   const filteredEntries = entries.filter((entry) => {
     const matchesEmployee = !selectedEmployeeId || entry.employeeId === selectedEmployeeId;
@@ -113,15 +112,15 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Filtered Income</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-semibold">{currency(totalIncome)}</div></CardContent>
+          <CardContent><div className="text-2xl font-semibold">{formatCurrency(totalIncome, currencyCode)}</div></CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Commission</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-semibold">{currency(totalCommission)}</div></CardContent>
+          <CardContent><div className="text-2xl font-semibold">{formatCurrency(totalCommission, currencyCode)}</div></CardContent>
         </Card>
         <Card>
           <CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Salon Profit</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-semibold">{currency(totalProfit)}</div></CardContent>
+          <CardContent><div className="text-2xl font-semibold">{formatCurrency(totalProfit, currencyCode)}</div></CardContent>
         </Card>
       </div>
       <div className="grid gap-4">
@@ -131,7 +130,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
             <table className="w-full min-w-[760px] text-sm">
               <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Period</th><th>Income</th><th>Expense</th><th>Commission</th><th>Profit</th></tr></thead>
               <tbody>{reportRows.map((row) => (
-                <tr key={row.period} className="border-b"><td className="py-3 font-medium">{row.period}</td><td>{currency(row.income)}</td><td>{currency(row.expense)}</td><td>{currency(row.commission)}</td><td className="font-semibold">{currency(row.profit)}</td></tr>
+                <tr key={row.period} className="border-b"><td className="py-3 font-medium">{row.period}</td><td>{formatCurrency(row.income, currencyCode)}</td><td>{formatCurrency(row.expense, currencyCode)}</td><td>{formatCurrency(row.commission, currencyCode)}</td><td className="font-semibold">{formatCurrency(row.profit, currencyCode)}</td></tr>
               ))}</tbody>
             </table>
           </CardContent>
@@ -144,7 +143,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
             <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Staff</th><th>Customer</th><th>Service</th><th>Income</th><th>Staff Payment</th><th>Profit</th></tr></thead>
             <tbody>{filteredEntries.length ? filteredEntries.map((entry) => (
               <tr key={entry.id} className="border-b">
-                <td className="py-3">{entry.serviceDate.toLocaleDateString()}</td><td className="font-medium">{entry.employee.name}</td><td>{entry.customer.name}</td><td>{entry.service.name}</td><td>{currency(Number(entry.amount))}</td><td>{currency(Number(entry.commissionAmount))}</td><td className="font-medium">{currency(Number(entry.salonProfit))}</td>
+                <td className="py-3">{entry.serviceDate.toLocaleDateString()}</td><td className="font-medium">{entry.employee.name}</td><td>{entry.customer.name}</td><td>{entry.service.name}</td><td>{formatCurrency(Number(entry.amount), currencyCode)}</td><td>{formatCurrency(Number(entry.commissionAmount), currencyCode)}</td><td className="font-medium">{formatCurrency(Number(entry.salonProfit), currencyCode)}</td>
               </tr>
             )) : (
               <tr><td colSpan={7} className="py-6 text-center text-muted-foreground">No income or staff payments match these filters.</td></tr>

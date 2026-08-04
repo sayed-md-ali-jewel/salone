@@ -65,6 +65,7 @@ model Employee {
   id             String         @id @default(auto()) @map("_id") @db.ObjectId
   name           String
   mobile         String?
+  joiningDate    DateTime?
   salaryType     SalaryType     @default(MONTHLY)
   monthlySalary  Float?
   commissionRate Float?
@@ -79,7 +80,6 @@ model Service {
   id             String         @id @default(auto()) @map("_id") @db.ObjectId
   name           String
   price          Float
-  defaultRate    Float          @default(0)
   serviceEntries ServiceEntry[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt

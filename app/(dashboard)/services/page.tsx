@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { Route } from "next";
 import { Eye, Pencil, Trash2, X } from "lucide-react";
 import { createService, deleteService, updateService } from "@/lib/actions";
+import { formatCurrency } from "@/lib/currency";
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
+import { getCurrencyCode } from "@/lib/settings";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +34,7 @@ function statusMessage(status: string) {
     "service-created": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Service added successfully." },
     "service-updated": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Service updated successfully." },
     "service-deleted": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Service deleted successfully." },
-    "service-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter a valid service name, price, and commission rate." },
+    "service-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter a valid service name and price." },
     "service-db-missing": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Database connection is required to save services." }
   };
   return messages[status];
@@ -44,11 +46,12 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
   const viewId = searchValue(params, "view") || "";
   const editId = searchValue(params, "edit") || "";
   const status = statusMessage(searchValue(params, "status") || "");
-  const [services, totalServices, selectedService] = hasDatabaseUrl() ? await Promise.all([
+  const [services, totalServices, selectedService, currencyCode] = hasDatabaseUrl() ? await Promise.all([
     prisma.service.findMany({ orderBy: { createdAt: "desc" }, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE }).catch(() => []),
     prisma.service.count().catch(() => 0),
-    viewId || editId ? prisma.service.findUnique({ where: { id: viewId || editId } }).catch(() => null) : null
-  ]) : [[], 0, null];
+    viewId || editId ? prisma.service.findUnique({ where: { id: viewId || editId } }).catch(() => null) : null,
+    getCurrencyCode()
+  ]) : [[], 0, null, "USD"];
 
   return (
     <>
@@ -61,7 +64,6 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
             <form action={createService} className="space-y-4">
               <div className="space-y-2"><Label>Service Name</Label><Input name="name" required /></div>
               <div className="space-y-2"><Label>Price</Label><Input name="price" type="number" step="0.01" required /></div>
-              <div className="space-y-2"><Label>Default Commission %</Label><Input name="defaultRate" type="number" step="0.01" defaultValue="0" /></div>
               <Button type="submit" className="w-full">Save Service</Button>
             </form>
           </CardContent>
@@ -69,11 +71,11 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
         <Card>
           <CardHeader><CardTitle>Service List</CardTitle></CardHeader>
           <CardContent className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-sm">
-              <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Service</th><th>Price</th><th>Default Commission</th><th className="sticky right-0 z-10 w-36 border-l bg-card text-center">Action</th></tr></thead>
+            <table className="w-full min-w-[620px] text-sm">
+              <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Service</th><th>Price</th><th className="sticky right-0 z-10 w-36 border-l bg-card text-center">Action</th></tr></thead>
               <tbody>{services.map((service) => (
                 <tr key={service.id} className="border-b">
-                  <td className="py-3 font-medium">{service.name}</td><td>${String(service.price)}</td><td>{String(service.defaultRate)}%</td>
+                  <td className="py-3 font-medium">{service.name}</td><td>{formatCurrency(Number(service.price), currencyCode)}</td>
                   <td className="sticky right-0 z-10 border-l bg-card">
                     <div className="flex justify-center gap-1">
                       <Button asChild variant="ghost" size="icon"><Link href={`/services?view=${service.id}` as Route}><Eye className="h-4 w-4" /></Link></Button>
@@ -97,8 +99,7 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
             </div>
             <dl className="space-y-3 text-sm">
               <div><dt className="text-muted-foreground">Service</dt><dd className="font-medium">{selectedService.name}</dd></div>
-              <div><dt className="text-muted-foreground">Price</dt><dd className="font-medium">${String(selectedService.price)}</dd></div>
-              <div><dt className="text-muted-foreground">Default Commission</dt><dd className="font-medium">{String(selectedService.defaultRate)}%</dd></div>
+              <div><dt className="text-muted-foreground">Price</dt><dd className="font-medium">{formatCurrency(Number(selectedService.price), currencyCode)}</dd></div>
             </dl>
           </div>
         </div>
@@ -114,7 +115,6 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
               <input type="hidden" name="id" value={selectedService.id} />
               <div className="space-y-2"><Label>Service Name</Label><Input name="name" defaultValue={selectedService.name} required /></div>
               <div className="space-y-2"><Label>Price</Label><Input name="price" type="number" step="0.01" defaultValue={selectedService.price} required /></div>
-              <div className="space-y-2"><Label>Default Commission %</Label><Input name="defaultRate" type="number" step="0.01" defaultValue={selectedService.defaultRate} /></div>
               <div className="flex justify-end gap-2">
                 <Button asChild variant="outline"><Link href="/services">Cancel</Link></Button>
                 <Button type="submit">Update Service</Button>

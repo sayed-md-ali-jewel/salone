@@ -17,6 +17,7 @@ type EmployeeListItem = {
   id: string;
   name: string;
   mobile: string | null;
+  joiningDate: Date | string | null;
   salaryType: string;
   monthlySalary: number | null;
   commissionRate: number | null;
@@ -51,6 +52,11 @@ export function EmployeeList({ employees, editingEmployee, currentPage, totalIte
     ...(filters.name ? { name: filters.name } : {}),
     ...(editingEmployee ? { edit: editingEmployee.id } : {})
   };
+  const formatDate = (value: Date | string | null) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+  };
 
   return (
     <>
@@ -66,11 +72,11 @@ export function EmployeeList({ employees, editingEmployee, currentPage, totalIte
             <Button asChild variant="outline"><Link href="/employees"><X className="h-4 w-4" />Reset</Link></Button>
           </form>
           <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-sm">
-            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Name</th><th>Type</th><th>Salary</th><th>Commission</th><th>Due Salary</th><th>Due Note</th><th className="sticky right-0 z-10 border-l bg-card text-center">Action</th></tr></thead>
+          <table className="w-full min-w-[1080px] text-sm">
+            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Name</th><th>Joining Date</th><th>Type</th><th>Salary</th><th>Commission</th><th>Due Salary</th><th>Due Note</th><th className="sticky right-0 z-10 border-l bg-card text-center">Action</th></tr></thead>
             <tbody>{employees.length ? employees.map((employee) => (
               <tr key={employee.id} className="border-b">
-                <td className="py-3 font-medium">{employee.name}</td><td><Badge>{employee.salaryType}</Badge></td><td>{employee.monthlySalary ? formatCurrency(Number(employee.monthlySalary), currencyCode) : "-"}</td><td>{employee.commissionRate ? `${employee.commissionRate}%` : "-"}</td><td>{formatCurrency(Number(employee.dueSalary || 0), currencyCode)}</td><td className="min-w-52 text-muted-foreground">{employee.dueSalaryNote || "-"}</td>
+                <td className="py-3 font-medium">{employee.name}</td><td>{formatDate(employee.joiningDate)}</td><td><Badge>{employee.salaryType}</Badge></td><td>{employee.monthlySalary ? formatCurrency(Number(employee.monthlySalary), currencyCode) : "-"}</td><td>{employee.commissionRate ? `${employee.commissionRate}%` : "-"}</td><td>{formatCurrency(Number(employee.dueSalary || 0), currencyCode)}</td><td className="min-w-52 text-muted-foreground">{employee.dueSalaryNote || "-"}</td>
                 <td className="sticky right-0 z-10 border-l bg-card">
                   <div className="flex justify-center gap-1">
                     <Button asChild variant="ghost" size="icon"><Link href={`/employees/${employee.id}` as Route}><Eye className="h-4 w-4" /></Link></Button>
@@ -80,7 +86,7 @@ export function EmployeeList({ employees, editingEmployee, currentPage, totalIte
                 </td>
               </tr>
             )) : (
-              <tr><td colSpan={7} className="py-6 text-center text-muted-foreground">No employees found.</td></tr>
+              <tr><td colSpan={8} className="py-6 text-center text-muted-foreground">No employees found.</td></tr>
             )}</tbody>
           </table>
           </div>
@@ -128,6 +134,7 @@ function EmployeeFormModal({
           {employee && <input type="hidden" name="id" value={employee.id} />}
           <div className="space-y-2"><Label>Name</Label><Input name="name" defaultValue={employee?.name || ""} required /></div>
           <div className="space-y-2"><Label>Mobile</Label><Input name="mobile" defaultValue={employee?.mobile || ""} /></div>
+          <div className="space-y-2"><Label>Joining Date</Label><Input name="joiningDate" type="date" defaultValue={employee?.joiningDate ? new Date(employee.joiningDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)} required /></div>
           <div className="space-y-2"><Label>Salary Type</Label><select name="salaryType" defaultValue={employee?.salaryType || "MONTHLY"} className="h-10 w-full rounded-md border bg-background px-3 text-sm"><option value="MONTHLY">Monthly</option><option value="PERCENTAGE">Percentage</option></select></div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2"><Label>Monthly Salary</Label><Input name="monthlySalary" type="number" step="0.01" defaultValue={employee?.monthlySalary || ""} /></div>

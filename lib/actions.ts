@@ -262,6 +262,8 @@ export async function createEmployee(formData: FormData) {
   if (!hasDatabaseUrl()) redirect("/employees?status=employee-db-missing");
   const name = String(formData.get("name") || "").trim();
   const mobile = String(formData.get("mobile") || "").trim();
+  const joiningDateValue = String(formData.get("joiningDate") || "");
+  const joiningDate = joiningDateValue ? validDate(`${joiningDateValue}T00:00:00`) : null;
   const salaryType = String(formData.get("salaryType")) === "PERCENTAGE" ? "PERCENTAGE" : "MONTHLY";
   const monthlySalary = validMoney(formData.get("monthlySalary"));
   const commissionRate = validMoney(formData.get("commissionRate"));
@@ -270,6 +272,7 @@ export async function createEmployee(formData: FormData) {
 
   if (
     !name ||
+    !joiningDate ||
     dueSalary === null ||
     dueSalary < 0 ||
     (dueSalary > 0 && !dueSalaryNote) ||
@@ -282,6 +285,7 @@ export async function createEmployee(formData: FormData) {
   await insertOne("Employee", {
     name,
     mobile,
+    joiningDate: mongoDate(joiningDate),
     salaryType,
     monthlySalary: salaryType === "MONTHLY" ? monthlySalary : null,
     commissionRate: salaryType === "PERCENTAGE" ? commissionRate : null,
@@ -300,6 +304,8 @@ export async function updateEmployee(formData: FormData) {
   if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/employees?status=employee-invalid");
   const name = String(formData.get("name") || "").trim();
   const mobile = String(formData.get("mobile") || "").trim();
+  const joiningDateValue = String(formData.get("joiningDate") || "");
+  const joiningDate = joiningDateValue ? validDate(`${joiningDateValue}T00:00:00`) : null;
   const salaryType = String(formData.get("salaryType")) === "PERCENTAGE" ? "PERCENTAGE" : "MONTHLY";
   const monthlySalary = validMoney(formData.get("monthlySalary"));
   const commissionRate = validMoney(formData.get("commissionRate"));
@@ -308,6 +314,7 @@ export async function updateEmployee(formData: FormData) {
 
   if (
     !name ||
+    !joiningDate ||
     dueSalary === null ||
     dueSalary < 0 ||
     (dueSalary > 0 && !dueSalaryNote) ||
@@ -326,6 +333,7 @@ export async function updateEmployee(formData: FormData) {
           $set: {
             name,
             mobile,
+            joiningDate: mongoDate(joiningDate),
             salaryType,
             monthlySalary: salaryType === "MONTHLY" ? monthlySalary : null,
             commissionRate: salaryType === "PERCENTAGE" ? commissionRate : null,
@@ -362,16 +370,14 @@ export async function createService(formData: FormData) {
   if (!hasDatabaseUrl()) redirect("/services?status=service-db-missing");
   const name = String(formData.get("name") || "").trim();
   const price = validMoney(formData.get("price"));
-  const defaultRate = validMoney(formData.get("defaultRate"));
 
-  if (!name || price === null || price <= 0 || defaultRate === null || defaultRate < 0 || defaultRate > 100) {
+  if (!name || price === null || price <= 0) {
     redirect("/services?status=service-invalid");
   }
 
   await insertOne("Service", {
     name,
-    price,
-    defaultRate
+    price
   });
   revalidatePath("/services");
   redirect("/services?status=service-created");
@@ -385,9 +391,8 @@ export async function updateService(formData: FormData) {
   if (!hasDatabaseUrl() || !isObjectId(id)) redirect("/services?status=service-invalid");
   const name = String(formData.get("name") || "").trim();
   const price = validMoney(formData.get("price"));
-  const defaultRate = validMoney(formData.get("defaultRate"));
 
-  if (!name || price === null || price <= 0 || defaultRate === null || defaultRate < 0 || defaultRate > 100) {
+  if (!name || price === null || price <= 0) {
     redirect(`/services?edit=${id}&status=service-invalid`);
   }
 
@@ -400,7 +405,6 @@ export async function updateService(formData: FormData) {
           $set: {
             name,
             price,
-            defaultRate,
             updatedAt: mongoDate()
           }
         }
