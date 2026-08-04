@@ -42,6 +42,8 @@ model Customer {
   name           String
   mobile         String         @unique
   address        String?
+  previousDue    Float?
+  previousDueNote String?
   serviceEntries ServiceEntry[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -54,6 +56,8 @@ model Employee {
   salaryType     SalaryType     @default(MONTHLY)
   monthlySalary  Float?
   commissionRate Float?
+  dueSalary      Float?
+  dueSalaryNote  String?
   serviceEntries ServiceEntry[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt

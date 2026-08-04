@@ -24,7 +24,7 @@ function statusMessage(status: string, wasUpdated: boolean) {
     "employee-created": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Employee added successfully." },
     "employee-updated": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Employee updated successfully." },
     "employee-deleted": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Employee deleted successfully." },
-    "employee-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter a valid employee name and salary details." },
+    "employee-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter valid employee salary details, including a due note when due salary is added." },
     "employee-db-missing": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Database connection is required to save employees." }
   };
   return messages[status] || (wasUpdated ? messages["employee-updated"] : undefined);

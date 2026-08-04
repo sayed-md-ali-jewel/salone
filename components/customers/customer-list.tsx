@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Filter, Pencil, Plus, Trash2, X } from "lucide-react";
 import { createCustomer, deleteCustomer, updateCustomer } from "@/lib/actions";
+import { formatCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,8 @@ type CustomerListItem = {
   name: string;
   mobile: string;
   address: string | null;
+  previousDue: number | null;
+  previousDueNote: string | null;
 };
 
 type CustomerListProps = {
@@ -22,6 +25,7 @@ type CustomerListProps = {
   currentPage: number;
   totalItems: number;
   pageSize: number;
+  currencyCode: string;
   filters: {
     name: string;
     mobile: string;
@@ -29,7 +33,7 @@ type CustomerListProps = {
   };
 };
 
-export function CustomerList({ customers, currentPage, totalItems, pageSize, filters }: CustomerListProps) {
+export function CustomerList({ customers, currentPage, totalItems, pageSize, currencyCode, filters }: CustomerListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerListItem | null>(null);
   const preserveParams = {
@@ -62,14 +66,16 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, fil
             <Button asChild variant="outline"><Link href="/customers"><X className="h-4 w-4" />Reset</Link></Button>
           </form>
           <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px] text-sm">
-            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Name</th><th>Mobile</th><th>Address</th><th className="sticky right-0 z-10 w-28 border-l bg-card text-center">Action</th></tr></thead>
+          <table className="w-full min-w-[920px] text-sm">
+            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Name</th><th>Mobile</th><th>Address</th><th>Previous Due</th><th>Due Note</th><th className="sticky right-0 z-10 w-28 border-l bg-card text-center">Action</th></tr></thead>
             <tbody>
               {customers.length ? customers.map((customer) => (
                 <tr key={customer.id} className="border-b">
                   <td className="py-3 font-medium">{customer.name}</td>
                   <td>{customer.mobile}</td>
                   <td>{customer.address}</td>
+                  <td>{formatCurrency(Number(customer.previousDue || 0), currencyCode)}</td>
+                  <td className="min-w-52 text-muted-foreground">{customer.previousDueNote || "-"}</td>
                   <td className="sticky right-0 z-10 border-l bg-card">
                     <div className="flex justify-center gap-1">
                       <Button variant="ghost" size="icon" type="button" onClick={() => setEditingCustomer(customer)}><Pencil className="h-4 w-4" /></Button>
@@ -78,7 +84,7 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, fil
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">No customers found.</td></tr>
+                <tr><td colSpan={6} className="py-6 text-center text-muted-foreground">No customers found.</td></tr>
               )}
             </tbody>
           </table>
@@ -98,6 +104,10 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, fil
               <div className="space-y-2"><Label>Name</Label><Input name="name" required /></div>
               <div className="space-y-2"><Label>Mobile</Label><Input name="mobile" required /></div>
               <div className="space-y-2"><Label>Address</Label><Input name="address" /></div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-2"><Label>Previous Due</Label><Input name="previousDue" type="number" step="0.01" min="0" defaultValue="0" /></div>
+                <div className="space-y-2"><Label>Due Note</Label><Input name="previousDueNote" placeholder="Required if due is added" /></div>
+              </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
                 <Button type="submit"><Plus className="h-4 w-4" />Save Customer</Button>
@@ -118,6 +128,10 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, fil
               <div className="space-y-2"><Label>Name</Label><Input name="name" defaultValue={editingCustomer.name} required /></div>
               <div className="space-y-2"><Label>Mobile</Label><Input name="mobile" defaultValue={editingCustomer.mobile} required /></div>
               <div className="space-y-2"><Label>Address</Label><Input name="address" defaultValue={editingCustomer.address || ""} /></div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-2"><Label>Previous Due</Label><Input name="previousDue" type="number" step="0.01" min="0" defaultValue={editingCustomer.previousDue || 0} /></div>
+                <div className="space-y-2"><Label>Due Note</Label><Input name="previousDueNote" defaultValue={editingCustomer.previousDueNote || ""} placeholder="Required if due is added" /></div>
+              </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setEditingCustomer(null)}>Cancel</Button>
                 <Button type="submit">Update Customer</Button>

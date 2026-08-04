@@ -132,8 +132,10 @@ export async function createCustomer(formData: FormData) {
     const name = String(formData.get("name") || "").trim();
     const mobile = String(formData.get("mobile") || "").trim();
     const address = String(formData.get("address") || "").trim();
+    const previousDue = validMoney(formData.get("previousDue"));
+    const previousDueNote = String(formData.get("previousDueNote") || "").trim();
 
-    if (!name || !mobile) {
+    if (!name || !mobile || previousDue === null || previousDue < 0 || (previousDue > 0 && !previousDueNote)) {
       redirect("/customers?status=customer-invalid");
     }
 
@@ -146,7 +148,9 @@ export async function createCustomer(formData: FormData) {
     await insertOne("Customer", {
       name,
       mobile,
-      address
+      address,
+      previousDue,
+      previousDueNote
     });
     revalidatePath("/customers");
     redirect("/customers?status=customer-created");
@@ -172,8 +176,10 @@ export async function updateCustomer(formData: FormData) {
     const name = String(formData.get("name") || "").trim();
     const mobile = String(formData.get("mobile") || "").trim();
     const address = String(formData.get("address") || "").trim();
+    const previousDue = validMoney(formData.get("previousDue"));
+    const previousDueNote = String(formData.get("previousDueNote") || "").trim();
 
-    if (!name || !mobile) {
+    if (!name || !mobile || previousDue === null || previousDue < 0 || (previousDue > 0 && !previousDueNote)) {
       redirect("/customers?status=customer-invalid");
     }
 
@@ -193,6 +199,8 @@ export async function updateCustomer(formData: FormData) {
               name,
               mobile,
               address,
+              previousDue,
+              previousDueNote,
               updatedAt: mongoDate()
             }
           }
@@ -217,9 +225,14 @@ export async function createEmployee(formData: FormData) {
   const salaryType = String(formData.get("salaryType")) === "PERCENTAGE" ? "PERCENTAGE" : "MONTHLY";
   const monthlySalary = validMoney(formData.get("monthlySalary"));
   const commissionRate = validMoney(formData.get("commissionRate"));
+  const dueSalary = validMoney(formData.get("dueSalary"));
+  const dueSalaryNote = String(formData.get("dueSalaryNote") || "").trim();
 
   if (
     !name ||
+    dueSalary === null ||
+    dueSalary < 0 ||
+    (dueSalary > 0 && !dueSalaryNote) ||
     (salaryType === "MONTHLY" && (monthlySalary === null || monthlySalary < 0)) ||
     (salaryType === "PERCENTAGE" && (commissionRate === null || commissionRate < 0 || commissionRate > 100))
   ) {
@@ -231,7 +244,9 @@ export async function createEmployee(formData: FormData) {
     mobile,
     salaryType,
     monthlySalary: salaryType === "MONTHLY" ? monthlySalary : null,
-    commissionRate: salaryType === "PERCENTAGE" ? commissionRate : null
+    commissionRate: salaryType === "PERCENTAGE" ? commissionRate : null,
+    dueSalary,
+    dueSalaryNote
   });
   revalidatePath("/employees");
   redirect("/employees?status=employee-created");
@@ -248,9 +263,14 @@ export async function updateEmployee(formData: FormData) {
   const salaryType = String(formData.get("salaryType")) === "PERCENTAGE" ? "PERCENTAGE" : "MONTHLY";
   const monthlySalary = validMoney(formData.get("monthlySalary"));
   const commissionRate = validMoney(formData.get("commissionRate"));
+  const dueSalary = validMoney(formData.get("dueSalary"));
+  const dueSalaryNote = String(formData.get("dueSalaryNote") || "").trim();
 
   if (
     !name ||
+    dueSalary === null ||
+    dueSalary < 0 ||
+    (dueSalary > 0 && !dueSalaryNote) ||
     (salaryType === "MONTHLY" && (monthlySalary === null || monthlySalary < 0)) ||
     (salaryType === "PERCENTAGE" && (commissionRate === null || commissionRate < 0 || commissionRate > 100))
   ) {
@@ -269,6 +289,8 @@ export async function updateEmployee(formData: FormData) {
             salaryType,
             monthlySalary: salaryType === "MONTHLY" ? monthlySalary : null,
             commissionRate: salaryType === "PERCENTAGE" ? commissionRate : null,
+            dueSalary,
+            dueSalaryNote,
             updatedAt: mongoDate()
           }
         }

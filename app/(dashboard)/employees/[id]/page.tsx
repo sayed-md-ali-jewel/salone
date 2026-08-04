@@ -101,10 +101,11 @@ export default async function EmployeePage({ params, searchParams }: EmployeePag
   return (
     <>
       <PageHeader title={employee.name} description="Review employee activity, payment amount, and payment history." action={<Button asChild variant="outline"><Link href="/employees"><ArrowLeft className="h-4 w-4" />Employees</Link></Button>} />
-      <div className="mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Salary Type</CardTitle></CardHeader><CardContent><Badge>{employee.salaryType}</Badge></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Filtered Income</CardTitle></CardHeader><CardContent><div className="text-2xl font-semibold">{formatCurrency(paymentRow.income, currencyCode)}</div></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Payment Due</CardTitle></CardHeader><CardContent><div className="text-2xl font-semibold">{formatCurrency(paymentRow.totalPayment, currencyCode)}</div></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Due Salary</CardTitle></CardHeader><CardContent><div className="text-2xl font-semibold">{formatCurrency(Number(employee.dueSalary || 0), currencyCode)}</div><p className="mt-1 text-xs text-muted-foreground">{employee.dueSalaryNote || "-"}</p></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Payment History</CardTitle></CardHeader><CardContent><div className="text-2xl font-semibold">{formatCurrency(totalPaid, currencyCode)}</div></CardContent></Card>
       </div>
       <Card className="mb-4">

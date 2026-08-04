@@ -1,4 +1,5 @@
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
+import { getCurrencyCode } from "@/lib/settings";
 import { CustomerList } from "@/components/customers/customer-list";
 import { PageHeader } from "@/components/layout/page-header";
 
@@ -30,7 +31,7 @@ function statusMessage(status: string) {
     "customer-updated": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Customer updated successfully." },
     "customer-deleted": { tone: "border-emerald-200 bg-emerald-50 text-emerald-700", text: "Customer deleted successfully." },
     "customer-exists": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "A customer with this mobile number already exists." },
-    "customer-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter both customer name and mobile number." },
+    "customer-invalid": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Please enter customer name, mobile number, and a due note when previous due is added." },
     "customer-db-missing": { tone: "border-destructive/30 bg-destructive/10 text-destructive", text: "Database connection is required to save customers." }
   };
   return messages[status];
@@ -47,16 +48,17 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
     ...(name ? { name: { contains: name } } : {}),
     ...(mobile ? { mobile: { contains: mobile } } : {})
   };
-  const [customers, totalCustomers] = hasDatabaseUrl() ? await Promise.all([
+  const [customers, totalCustomers, currencyCode] = hasDatabaseUrl() ? await Promise.all([
     prisma.customer.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * perPage, take: perPage }).catch(() => []),
-    prisma.customer.count({ where }).catch(() => 0)
-  ]) : [[], 0];
+    prisma.customer.count({ where }).catch(() => 0),
+    getCurrencyCode()
+  ]) : [[], 0, "USD"];
 
   return (
     <>
       <PageHeader title="Customers" description="Add, edit and remove salon customers." />
       {status && <div className={`mb-4 rounded-md border px-4 py-3 text-sm font-medium ${status.tone}`}>{status.text}</div>}
-      <CustomerList customers={customers} currentPage={page} totalItems={totalCustomers} pageSize={perPage} filters={{ name, mobile, perPage: String(perPage) }} />
+      <CustomerList customers={customers} currentPage={page} totalItems={totalCustomers} pageSize={perPage} currencyCode={currencyCode} filters={{ name, mobile, perPage: String(perPage) }} />
     </>
   );
 }

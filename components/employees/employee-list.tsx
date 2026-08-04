@@ -20,6 +20,8 @@ type EmployeeListItem = {
   salaryType: string;
   monthlySalary: number | null;
   commissionRate: number | null;
+  dueSalary: number | null;
+  dueSalaryNote: string | null;
 };
 
 type EmployeeListProps = {
@@ -64,11 +66,11 @@ export function EmployeeList({ employees, editingEmployee, currentPage, totalIte
             <Button asChild variant="outline"><Link href="/employees"><X className="h-4 w-4" />Reset</Link></Button>
           </form>
           <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-sm">
-            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Name</th><th>Type</th><th>Salary</th><th>Commission</th><th className="sticky right-0 z-10 border-l bg-card text-center">Action</th></tr></thead>
+          <table className="w-full min-w-[980px] text-sm">
+            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Name</th><th>Type</th><th>Salary</th><th>Commission</th><th>Due Salary</th><th>Due Note</th><th className="sticky right-0 z-10 border-l bg-card text-center">Action</th></tr></thead>
             <tbody>{employees.length ? employees.map((employee) => (
               <tr key={employee.id} className="border-b">
-                <td className="py-3 font-medium">{employee.name}</td><td><Badge>{employee.salaryType}</Badge></td><td>{employee.monthlySalary ? formatCurrency(Number(employee.monthlySalary), currencyCode) : "-"}</td><td>{employee.commissionRate ? `${employee.commissionRate}%` : "-"}</td>
+                <td className="py-3 font-medium">{employee.name}</td><td><Badge>{employee.salaryType}</Badge></td><td>{employee.monthlySalary ? formatCurrency(Number(employee.monthlySalary), currencyCode) : "-"}</td><td>{employee.commissionRate ? `${employee.commissionRate}%` : "-"}</td><td>{formatCurrency(Number(employee.dueSalary || 0), currencyCode)}</td><td className="min-w-52 text-muted-foreground">{employee.dueSalaryNote || "-"}</td>
                 <td className="sticky right-0 z-10 border-l bg-card">
                   <div className="flex justify-center gap-1">
                     <Button asChild variant="ghost" size="icon"><Link href={`/employees/${employee.id}` as Route}><Eye className="h-4 w-4" /></Link></Button>
@@ -78,7 +80,7 @@ export function EmployeeList({ employees, editingEmployee, currentPage, totalIte
                 </td>
               </tr>
             )) : (
-              <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">No employees found.</td></tr>
+              <tr><td colSpan={7} className="py-6 text-center text-muted-foreground">No employees found.</td></tr>
             )}</tbody>
           </table>
           </div>
@@ -130,6 +132,10 @@ function EmployeeFormModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2"><Label>Monthly Salary</Label><Input name="monthlySalary" type="number" step="0.01" defaultValue={employee?.monthlySalary || ""} /></div>
             <div className="space-y-2"><Label>Commission %</Label><Input name="commissionRate" type="number" step="0.01" defaultValue={employee?.commissionRate || ""} /></div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-2"><Label>Due Salary</Label><Input name="dueSalary" type="number" step="0.01" min="0" defaultValue={employee?.dueSalary || 0} /></div>
+            <div className="space-y-2"><Label>Due Salary Note</Label><Input name="dueSalaryNote" defaultValue={employee?.dueSalaryNote || ""} placeholder="Required if due is added" /></div>
           </div>
           <div className="flex justify-end gap-2">
             {closeHref ? (
