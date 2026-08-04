@@ -38,21 +38,25 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
   const status = statusMessage(searchValue(params, "status") || "", wasUpdated);
   const page = pageNumber(searchValue(params, "page"));
   const name = (searchValue(params, "name") || "").trim();
+  const requestedSalaryType = searchValue(params, "salaryType") || "";
+  const salaryType = requestedSalaryType === "MONTHLY" || requestedSalaryType === "PERCENTAGE" ? requestedSalaryType : "";
   const where = {
-    ...(name ? { name: { contains: name } } : {})
+    ...(name ? { name: { contains: name } } : {}),
+    ...(salaryType ? { salaryType: salaryType as "MONTHLY" | "PERCENTAGE" } : {})
   };
-  const [employees, totalEmployees, editingEmployee, currencyCode] = hasDatabaseUrl() ? await Promise.all([
+  const [employees, employeeOptions, totalEmployees, editingEmployee, currencyCode] = hasDatabaseUrl() ? await Promise.all([
     prisma.employee.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE }).catch(() => []),
+    prisma.employee.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }).catch(() => []),
     prisma.employee.count({ where }).catch(() => 0),
     editId ? prisma.employee.findUnique({ where: { id: editId } }).catch(() => null) : null,
     getCurrencyCode()
-  ]) : [[], 0, null, "USD"];
+  ]) : [[], [], 0, null, "USD"];
 
   return (
     <>
       <PageHeader title="Employees" description="Manage monthly and percentage-based staff salary rules." />
       {status && <StatusAlert tone={status.tone} text={status.text} />}
-      <EmployeeList employees={employees} editingEmployee={editingEmployee} currentPage={page} totalItems={totalEmployees} pageSize={PAGE_SIZE} currencyCode={currencyCode} filters={{ name }} />
+      <EmployeeList employees={employees} employeeOptions={employeeOptions} editingEmployee={editingEmployee} currentPage={page} totalItems={totalEmployees} pageSize={PAGE_SIZE} currencyCode={currencyCode} filters={{ name, salaryType }} />
     </>
   );
 }

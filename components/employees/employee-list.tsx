@@ -28,6 +28,7 @@ type EmployeeListItem = {
 
 type EmployeeListProps = {
   employees: EmployeeListItem[];
+  employeeOptions: { id: string; name: string }[];
   editingEmployee: EmployeeListItem | null;
   currentPage: number;
   totalItems: number;
@@ -35,6 +36,7 @@ type EmployeeListProps = {
   currencyCode: string;
   filters: {
     name: string;
+    salaryType: string;
   };
 };
 
@@ -46,11 +48,12 @@ function employeeEditPath(page: number, id: string): Route {
   return page > 1 ? `/employees?page=${page}&edit=${id}` : `/employees?edit=${id}`;
 }
 
-export function EmployeeList({ employees, editingEmployee, currentPage, totalItems, pageSize, currencyCode, filters }: EmployeeListProps) {
+export function EmployeeList({ employees, employeeOptions, editingEmployee, currentPage, totalItems, pageSize, currencyCode, filters }: EmployeeListProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const modalEmployee = editingEmployee;
   const preserveParams = {
     ...(filters.name ? { name: filters.name } : {}),
+    ...(filters.salaryType ? { salaryType: filters.salaryType } : {}),
     ...(editingEmployee ? { edit: editingEmployee.id } : {})
   };
   return (
@@ -61,8 +64,22 @@ export function EmployeeList({ employees, editingEmployee, currentPage, totalIte
           <Button type="button" onClick={() => setIsAddModalOpen(true)}><Plus className="h-4 w-4" />Add Employee</Button>
         </CardHeader>
         <CardContent>
-          <form className="mb-4 grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
-            <div className="space-y-2"><Label>Name</Label><Input name="name" defaultValue={filters.name} /></div>
+          <form className="mb-4 grid gap-3 md:grid-cols-[1fr_180px_auto_auto] md:items-end">
+            <div className="space-y-2">
+              <Label>Name</Label>
+              <select name="name" defaultValue={filters.name} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="">All employees</option>
+                {employeeOptions.map((employee) => <option key={employee.id} value={employee.name}>{employee.name}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <select name="salaryType" defaultValue={filters.salaryType} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="">All types</option>
+                <option value="MONTHLY">Monthly</option>
+                <option value="PERCENTAGE">Percentage</option>
+              </select>
+            </div>
             <Button type="submit"><Filter className="h-4 w-4" />Apply</Button>
             <Button asChild variant="outline"><Link href="/employees"><X className="h-4 w-4" />Reset</Link></Button>
           </form>
