@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Eye, Filter, Pencil, Plus, Trash2, X } from "lucide-react";
 import { createExpense, deleteExpense, updateExpense } from "@/lib/actions";
+import { formatDisplayDate } from "@/lib/date-format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,10 +43,6 @@ export function ExpenseList({ expenses, currentPage, totalItems, pageSize, filte
     ...(filters.category ? { category: filters.category } : {})
   };
   const categoryOptions = ["RENT", "SALARY", "PRODUCT", "UTILITY", "OTHER"];
-  const formatDate = (value: Date | string) => {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
-  };
   const dateInputValue = (value: Date | string) => {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
@@ -84,7 +81,7 @@ export function ExpenseList({ expenses, currentPage, totalItems, pageSize, filte
             <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Title</th><th>Category</th><th>Amount</th><th className="sticky right-0 z-10 w-36 border-l bg-card text-center">Action</th></tr></thead>
             <tbody>{expenses.length ? expenses.map((expense) => (
               <tr key={expense.id} className="border-b">
-                <td className="py-3">{formatDate(expense.expenseDate)}</td><td className="font-medium">{expense.title}</td><td><Badge>{expense.category}</Badge></td><td>${String(expense.amount)}</td>
+                <td className="py-3">{formatDisplayDate(expense.expenseDate)}</td><td className="font-medium">{expense.title}</td><td><Badge>{expense.category}</Badge></td><td>${String(expense.amount)}</td>
                 <td className="sticky right-0 z-10 border-l bg-card">
                   <div className="flex justify-center gap-1">
                     <Button variant="ghost" size="icon" type="button" onClick={() => setViewingExpense(expense)}><Eye className="h-4 w-4" /></Button>
@@ -130,7 +127,7 @@ export function ExpenseList({ expenses, currentPage, totalItems, pageSize, filte
               <Button type="button" variant="ghost" size="icon" onClick={() => setViewingExpense(null)}><X className="h-4 w-4" /></Button>
             </div>
             <dl className="space-y-3 text-sm">
-              <div><dt className="text-muted-foreground">Date</dt><dd className="font-medium">{formatDate(viewingExpense.expenseDate)}</dd></div>
+              <div><dt className="text-muted-foreground">Date</dt><dd className="font-medium">{formatDisplayDate(viewingExpense.expenseDate)}</dd></div>
               <div><dt className="text-muted-foreground">Title</dt><dd className="font-medium">{viewingExpense.title}</dd></div>
               <div><dt className="text-muted-foreground">Category</dt><dd><Badge>{viewingExpense.category}</Badge></dd></div>
               <div><dt className="text-muted-foreground">Amount</dt><dd className="font-medium">${String(viewingExpense.amount)}</dd></div>

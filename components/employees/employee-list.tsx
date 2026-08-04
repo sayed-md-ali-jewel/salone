@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Eye, Filter, Pencil, Plus, Trash2, X } from "lucide-react";
 import { createEmployee, deleteEmployee, updateEmployee } from "@/lib/actions";
 import { formatCurrency } from "@/lib/currency";
+import { formatDisplayDate } from "@/lib/date-format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,12 +53,6 @@ export function EmployeeList({ employees, editingEmployee, currentPage, totalIte
     ...(filters.name ? { name: filters.name } : {}),
     ...(editingEmployee ? { edit: editingEmployee.id } : {})
   };
-  const formatDate = (value: Date | string | null) => {
-    if (!value) return "-";
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
-  };
-
   return (
     <>
       <Card>
@@ -76,7 +71,7 @@ export function EmployeeList({ employees, editingEmployee, currentPage, totalIte
             <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Name</th><th>Joining Date</th><th>Type</th><th>Salary</th><th>Commission</th><th>Due Salary</th><th>Due Note</th><th className="sticky right-0 z-10 border-l bg-card text-center">Action</th></tr></thead>
             <tbody>{employees.length ? employees.map((employee) => (
               <tr key={employee.id} className="border-b">
-                <td className="py-3 font-medium">{employee.name}</td><td>{formatDate(employee.joiningDate)}</td><td><Badge>{employee.salaryType}</Badge></td><td>{employee.monthlySalary ? formatCurrency(Number(employee.monthlySalary), currencyCode) : "-"}</td><td>{employee.commissionRate ? `${employee.commissionRate}%` : "-"}</td><td>{formatCurrency(Number(employee.dueSalary || 0), currencyCode)}</td><td className="min-w-52 text-muted-foreground">{employee.dueSalaryNote || "-"}</td>
+                <td className="py-3 font-medium">{employee.name}</td><td>{formatDisplayDate(employee.joiningDate)}</td><td><Badge>{employee.salaryType}</Badge></td><td>{employee.monthlySalary ? formatCurrency(Number(employee.monthlySalary), currencyCode) : "-"}</td><td>{employee.commissionRate ? `${employee.commissionRate}%` : "-"}</td><td>{formatCurrency(Number(employee.dueSalary || 0), currencyCode)}</td><td className="min-w-52 text-muted-foreground">{employee.dueSalaryNote || "-"}</td>
                 <td className="sticky right-0 z-10 border-l bg-card">
                   <div className="flex justify-center gap-1">
                     <Button asChild variant="ghost" size="icon"><Link href={`/employees/${employee.id}` as Route}><Eye className="h-4 w-4" /></Link></Button>

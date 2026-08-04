@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Filter, Pencil, Plus, Trash2, X } from "lucide-react";
 import { deleteServiceEntry, updateServiceEntry } from "@/lib/actions";
+import { formatDisplayDate } from "@/lib/date-format";
 import { ServiceEntryForm } from "@/components/entries/service-entry-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,10 +56,6 @@ export function ServiceEntryList({ customers, employees, services, entries, curr
     ...(filters.employeeId ? { employeeId: filters.employeeId } : {}),
     ...(filters.perPage !== "25" ? { perPage: filters.perPage } : {})
   };
-  const formatDate = (value: Date | string) => {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
-  };
   const dateInputValue = (value: Date | string) => {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
@@ -104,7 +101,7 @@ export function ServiceEntryList({ customers, employees, services, entries, curr
             <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Customer</th><th>Employee</th><th>Service</th><th>Amount</th><th>Commission</th><th>Profit</th><th className="sticky right-0 z-10 w-28 border-l bg-card text-center">Action</th></tr></thead>
             <tbody>{entries.length ? entries.map((entry) => (
               <tr key={entry.id} className="border-b">
-                <td className="py-3">{formatDate(entry.serviceDate)}</td><td>{entry.customer.name}</td><td>{entry.employee.name}</td><td>{entry.service.name}</td><td>${String(entry.amount)}</td><td>${String(entry.commissionAmount)}</td><td className="font-medium">${String(entry.salonProfit)}</td>
+                <td className="py-3">{formatDisplayDate(entry.serviceDate)}</td><td>{entry.customer.name}</td><td>{entry.employee.name}</td><td>{entry.service.name}</td><td>${String(entry.amount)}</td><td>${String(entry.commissionAmount)}</td><td className="font-medium">${String(entry.salonProfit)}</td>
                 <td className="sticky right-0 z-10 border-l bg-card">
                   <div className="flex justify-center gap-1">
                     <Button variant="ghost" size="icon" type="button" onClick={() => setEditingEntry(entry)}><Pencil className="h-4 w-4" /></Button>

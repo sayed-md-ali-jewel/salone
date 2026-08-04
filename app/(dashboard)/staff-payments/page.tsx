@@ -4,6 +4,7 @@ import { Filter, X } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { PaymentTable } from "@/components/staff-payments/payment-table";
 import { formatCurrency } from "@/lib/currency";
+import { formatDisplayDate } from "@/lib/date-format";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -180,7 +181,7 @@ export default async function StaffPaymentsPage({ searchParams }: StaffPaymentsP
               <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Paid Date</th><th>Title</th><th>Amount</th><th>Notes</th></tr></thead>
               <tbody>{paginatedPaymentHistory.length ? paginatedPaymentHistory.map((expense) => (
                 <tr key={expense.id} className="border-b">
-                  <td className="py-3">{expense.expenseDate.toLocaleDateString()}</td><td className="font-medium">{expense.title}</td><td>{formatCurrency(Number(expense.amount), currencyCode)}</td><td className="min-w-56 text-muted-foreground">{expense.notes || "-"}</td>
+                  <td className="py-3">{formatDisplayDate(expense.expenseDate)}</td><td className="font-medium">{expense.title}</td><td>{formatCurrency(Number(expense.amount), currencyCode)}</td><td className="min-w-56 text-muted-foreground">{expense.notes || "-"}</td>
                 </tr>
               )) : (
                 <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">No staff payment history yet.</td></tr>

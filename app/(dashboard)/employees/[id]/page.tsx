@@ -5,6 +5,7 @@ import { ArrowLeft, Filter, X } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { PaymentTable } from "@/components/staff-payments/payment-table";
 import { formatCurrency } from "@/lib/currency";
+import { formatDisplayDate } from "@/lib/date-format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,12 +63,6 @@ function paidForEmployeePeriod(expenses: { title: string; notes: string | null; 
   }), (expense) => Number(expense.amount));
 }
 
-function formatDate(value: Date | string | null) {
-  if (!value) return "-";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
-}
-
 export default async function EmployeePage({ params, searchParams }: EmployeePageProps) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const selectedDate = searchValue(query, "date") || "";
@@ -108,7 +103,7 @@ export default async function EmployeePage({ params, searchParams }: EmployeePag
     <>
       <PageHeader title={employee.name} description="Review employee activity, payment amount, and payment history." action={<Button asChild variant="outline"><Link href="/employees"><ArrowLeft className="h-4 w-4" />Employees</Link></Button>} />
       <div className="mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Joining Date</CardTitle></CardHeader><CardContent><div className="text-2xl font-semibold">{formatDate(employee.joiningDate)}</div></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Joining Date</CardTitle></CardHeader><CardContent><div className="text-2xl font-semibold">{formatDisplayDate(employee.joiningDate)}</div></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Salary Type</CardTitle></CardHeader><CardContent><Badge>{employee.salaryType}</Badge></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Filtered Income</CardTitle></CardHeader><CardContent><div className="text-2xl font-semibold">{formatCurrency(paymentRow.income, currencyCode)}</div></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm font-medium text-muted-foreground">Payment Due</CardTitle></CardHeader><CardContent><div className="text-2xl font-semibold">{formatCurrency(paymentRow.totalPayment, currencyCode)}</div></CardContent></Card>
@@ -126,34 +121,32 @@ export default async function EmployeePage({ params, searchParams }: EmployeePag
           </form>
         </CardContent>
       </Card>
-      <div className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
-        <Card>
-          <CardHeader><CardTitle>Employee Payment</CardTitle></CardHeader>
-          <CardContent className="overflow-x-auto">
-            <PaymentTable rows={[paymentRow]} selectedDate={selectedDate} selectedMonth={selectedMonth} currencyCode={currencyCode} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle>Payment History</CardTitle></CardHeader>
-          <CardContent className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm">
-              <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Paid Date</th><th>Amount</th><th>Notes</th></tr></thead>
-              <tbody>{paymentHistory.length ? paymentHistory.map((expense) => (
-                <tr key={expense.id} className="border-b"><td className="py-3">{expense.expenseDate.toLocaleDateString()}</td><td className="font-medium">{formatCurrency(Number(expense.amount), currencyCode)}</td><td className="min-w-56 text-muted-foreground">{expense.notes || "-"}</td></tr>
-              )) : (
-                <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">No payment history for this employee.</td></tr>
-              )}</tbody>
-            </table>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader><CardTitle>Employee Payment</CardTitle></CardHeader>
+        <CardContent className="overflow-x-auto">
+          <PaymentTable rows={[paymentRow]} selectedDate={selectedDate} selectedMonth={selectedMonth} currencyCode={currencyCode} />
+        </CardContent>
+      </Card>
+      <Card className="mt-4">
+        <CardHeader><CardTitle>Payment History</CardTitle></CardHeader>
+        <CardContent className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Paid Date</th><th>Amount</th><th>Notes</th></tr></thead>
+            <tbody>{paymentHistory.length ? paymentHistory.map((expense) => (
+              <tr key={expense.id} className="border-b"><td className="py-3">{formatDisplayDate(expense.expenseDate)}</td><td className="font-medium">{formatCurrency(Number(expense.amount), currencyCode)}</td><td className="min-w-56 text-muted-foreground">{expense.notes || "-"}</td></tr>
+            )) : (
+              <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">No payment history for this employee.</td></tr>
+            )}</tbody>
+          </table>
+        </CardContent>
+      </Card>
       <Card className="mt-4">
         <CardHeader><CardTitle>Service History</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-sm">
             <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Customer</th><th>Service</th><th>Income</th><th>Commission</th><th>Profit</th></tr></thead>
             <tbody>{serviceEntries.length ? serviceEntries.map((entry) => (
-              <tr key={entry.id} className="border-b"><td className="py-3">{entry.serviceDate.toLocaleDateString()}</td><td>{entry.customer.name}</td><td>{entry.service.name}</td><td>{formatCurrency(Number(entry.amount), currencyCode)}</td><td>{formatCurrency(Number(entry.commissionAmount), currencyCode)}</td><td className="font-medium">{formatCurrency(Number(entry.salonProfit), currencyCode)}</td></tr>
+              <tr key={entry.id} className="border-b"><td className="py-3">{formatDisplayDate(entry.serviceDate)}</td><td>{entry.customer.name}</td><td>{entry.service.name}</td><td>{formatCurrency(Number(entry.amount), currencyCode)}</td><td>{formatCurrency(Number(entry.commissionAmount), currencyCode)}</td><td className="font-medium">{formatCurrency(Number(entry.salonProfit), currencyCode)}</td></tr>
             )) : (
               <tr><td colSpan={6} className="py-6 text-center text-muted-foreground">No service history matches these filters.</td></tr>
             )}</tbody>

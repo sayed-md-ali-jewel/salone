@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Banknote, Eye, Filter, Pencil, Plus, Trash2, X } from "lucide-react";
 import { createCustomer, createCustomerPayment, deleteCustomer, updateCustomer } from "@/lib/actions";
 import { formatCurrency } from "@/lib/currency";
+import { formatDisplayDate } from "@/lib/date-format";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -62,10 +63,6 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, cur
   const paidAmount = (customer: CustomerListItem) => customer.customerPayments.reduce((total, payment) => total + Number(payment.amount), 0);
   const serviceAmount = (customer: CustomerListItem) => customer.serviceEntries.reduce((total, entry) => total + Number(entry.amount), 0);
   const dueBalance = (customer: CustomerListItem) => Math.max(0, Number(customer.previousDue || 0) - paidAmount(customer));
-  const formatDate = (value: Date | string) => {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
-  };
   const today = () => new Date().toISOString().slice(0, 10);
 
   return (
@@ -206,7 +203,7 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, cur
                     <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Amount</th><th>Note</th></tr></thead>
                     <tbody>{viewingCustomer.customerPayments.length ? viewingCustomer.customerPayments.map((payment) => (
                       <tr key={payment.id} className="border-b">
-                        <td className="py-2">{formatDate(payment.paymentDate)}</td>
+                        <td className="py-2">{formatDisplayDate(payment.paymentDate)}</td>
                         <td>{formatCurrency(Number(payment.amount), currencyCode)}</td>
                         <td className="text-muted-foreground">{payment.notes}</td>
                       </tr>
@@ -223,7 +220,7 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, cur
                     <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Service</th><th>Employee</th><th>Amount</th><th>Note</th></tr></thead>
                     <tbody>{viewingCustomer.serviceEntries.length ? viewingCustomer.serviceEntries.map((entry) => (
                       <tr key={entry.id} className="border-b">
-                        <td className="py-2">{formatDate(entry.serviceDate)}</td>
+                        <td className="py-2">{formatDisplayDate(entry.serviceDate)}</td>
                         <td>{entry.service.name}</td>
                         <td>{entry.employee.name}</td>
                         <td>{formatCurrency(Number(entry.amount), currencyCode)}</td>
@@ -264,7 +261,7 @@ export function CustomerList({ customers, currentPage, totalItems, pageSize, cur
                       <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Amount</th><th>Note</th></tr></thead>
                       <tbody>{payingCustomer.customerPayments.map((payment) => (
                         <tr key={payment.id} className="border-b">
-                          <td className="py-2">{formatDate(payment.paymentDate)}</td>
+                          <td className="py-2">{formatDisplayDate(payment.paymentDate)}</td>
                           <td>{formatCurrency(Number(payment.amount), currencyCode)}</td>
                           <td className="text-muted-foreground">{payment.notes}</td>
                         </tr>

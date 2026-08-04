@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   title: "Royale Arab Men's Club",
   description:
     "Men's club income, expense, customer, employee and report management",
+  icons: {
+    icon: "/royal-arob.jpeg",
+    shortcut: "/royal-arob.jpeg",
+    apple: "/royal-arob.jpeg"
+  }
 };
 
 const outfit = Outfit({ subsets: ["latin"] });

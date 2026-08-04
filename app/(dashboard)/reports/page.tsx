@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/currency";
+import { formatDisplayDate } from "@/lib/date-format";
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
 import { getCurrencyCode } from "@/lib/settings";
 
@@ -143,7 +144,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
             <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Staff</th><th>Customer</th><th>Service</th><th>Income</th><th>Staff Payment</th><th>Profit</th></tr></thead>
             <tbody>{filteredEntries.length ? filteredEntries.map((entry) => (
               <tr key={entry.id} className="border-b">
-                <td className="py-3">{entry.serviceDate.toLocaleDateString()}</td><td className="font-medium">{entry.employee.name}</td><td>{entry.customer.name}</td><td>{entry.service.name}</td><td>{formatCurrency(Number(entry.amount), currencyCode)}</td><td>{formatCurrency(Number(entry.commissionAmount), currencyCode)}</td><td className="font-medium">{formatCurrency(Number(entry.salonProfit), currencyCode)}</td>
+                <td className="py-3">{formatDisplayDate(entry.serviceDate)}</td><td className="font-medium">{entry.employee.name}</td><td>{entry.customer.name}</td><td>{entry.service.name}</td><td>{formatCurrency(Number(entry.amount), currencyCode)}</td><td>{formatCurrency(Number(entry.commissionAmount), currencyCode)}</td><td className="font-medium">{formatCurrency(Number(entry.salonProfit), currencyCode)}</td>
               </tr>
             )) : (
               <tr><td colSpan={7} className="py-6 text-center text-muted-foreground">No income or staff payments match these filters.</td></tr>
