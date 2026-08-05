@@ -1,4 +1,5 @@
 import { hasDatabaseUrl, prisma } from "@/lib/prisma";
+import { getCurrencyCode } from "@/lib/settings";
 import { ServiceEntryList } from "@/components/entries/service-entry-list";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatusAlert } from "@/components/ui/status-alert";
@@ -47,7 +48,7 @@ export default async function EntriesPage({ searchParams }: EntriesPageProps) {
     ...(selectedServiceId ? { serviceId: selectedServiceId } : {}),
     ...(selectedEmployeeId ? { employeeId: selectedEmployeeId } : {})
   };
-  const [customers, employees, services, entries, totalEntries] = hasDatabaseUrl() ? await Promise.all([
+  const [customers, employees, services, entries, totalEntries, currencyCode] = hasDatabaseUrl() ? await Promise.all([
     prisma.customer.findMany({ orderBy: { name: "asc" } }).catch(() => []),
     prisma.employee.findMany({ orderBy: { name: "asc" } }).catch(() => []),
     prisma.service.findMany({ orderBy: { name: "asc" } }).catch(() => []),
@@ -58,8 +59,9 @@ export default async function EntriesPage({ searchParams }: EntriesPageProps) {
       take: perPage,
       include: { customer: true, employee: true, service: true }
     }).catch(() => []),
-    prisma.serviceEntry.count({ where }).catch(() => 0)
-  ]) : [[], [], [], [], 0];
+    prisma.serviceEntry.count({ where }).catch(() => 0),
+    getCurrencyCode()
+  ]) : [[], [], [], [], 0, "USD"];
 
   return (
     <>
@@ -73,6 +75,7 @@ export default async function EntriesPage({ searchParams }: EntriesPageProps) {
         currentPage={page}
         totalItems={totalEntries}
         pageSize={perPage}
+        currencyCode={currencyCode}
         filters={{ serviceId: selectedServiceId, employeeId: selectedEmployeeId, perPage: String(perPage) }}
       />
     </>

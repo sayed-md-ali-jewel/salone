@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Filter, Pencil, Plus, Trash2, X } from "lucide-react";
 import { deleteServiceEntry, updateServiceEntry } from "@/lib/actions";
+import { formatCurrency } from "@/lib/currency";
 import { formatDisplayDate } from "@/lib/date-format";
 import { ServiceEntryForm } from "@/components/entries/service-entry-form";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ type ServiceEntryListProps = {
   currentPage: number;
   totalItems: number;
   pageSize: number;
+  currencyCode: string;
   filters: {
     serviceId: string;
     employeeId: string;
@@ -48,7 +50,7 @@ type ServiceEntryListProps = {
   };
 };
 
-export function ServiceEntryList({ customers, employees, services, entries, currentPage, totalItems, pageSize, filters }: ServiceEntryListProps) {
+export function ServiceEntryList({ customers, employees, services, entries, currentPage, totalItems, pageSize, currencyCode, filters }: ServiceEntryListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<ServiceEntryListItem | null>(null);
   const preserveParams = {
@@ -101,7 +103,7 @@ export function ServiceEntryList({ customers, employees, services, entries, curr
             <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">Date</th><th>Customer</th><th>Employee</th><th>Service</th><th>Amount</th><th>Commission</th><th>Profit</th><th className="sticky right-0 z-10 w-28 border-l bg-card text-center">Action</th></tr></thead>
             <tbody>{entries.length ? entries.map((entry) => (
               <tr key={entry.id} className="border-b">
-                <td className="py-3">{formatDisplayDate(entry.serviceDate)}</td><td>{entry.customer.name}</td><td>{entry.employee.name}</td><td>{entry.service.name}</td><td>${String(entry.amount)}</td><td>${String(entry.commissionAmount)}</td><td className="font-medium">${String(entry.salonProfit)}</td>
+                <td className="py-3">{formatDisplayDate(entry.serviceDate)}</td><td>{entry.customer.name}</td><td>{entry.employee.name}</td><td>{entry.service.name}</td><td>{formatCurrency(Number(entry.amount), currencyCode)}</td><td>{formatCurrency(Number(entry.commissionAmount), currencyCode)}</td><td className="font-medium">{formatCurrency(Number(entry.salonProfit), currencyCode)}</td>
                 <td className="sticky right-0 z-10 border-l bg-card">
                   <div className="flex justify-center gap-1">
                     <Button variant="ghost" size="icon" type="button" onClick={() => setEditingEntry(entry)}><Pencil className="h-4 w-4" /></Button>
@@ -125,7 +127,7 @@ export function ServiceEntryList({ customers, employees, services, entries, curr
               <h2 className="text-lg font-semibold">Add Service Entry</h2>
               <Button type="button" variant="ghost" size="icon" onClick={() => setIsModalOpen(false)}><X className="h-4 w-4" /></Button>
             </div>
-            <ServiceEntryForm customers={customers} employees={employees} services={services} />
+            <ServiceEntryForm customers={customers} employees={employees} services={services} currencyCode={currencyCode} />
           </div>
         </div>
       )}
@@ -153,7 +155,7 @@ export function ServiceEntryList({ customers, employees, services, entries, curr
               <div className="space-y-2">
                 <Label>Service</Label>
                 <select name="serviceId" defaultValue={editingEntry.service.id} required className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                  {services.map((item) => <option key={item.id} value={item.id}>{item.name} - ${String(item.price)}</option>)}
+                  {services.map((item) => <option key={item.id} value={item.id}>{item.name} - {formatCurrency(item.price, currencyCode)}</option>)}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
